@@ -1,0 +1,157 @@
+/* =========================================
+   LAYOUT: TARJETAS DE ESTADÍSTICAS
+========================================= */
+.stats-section { 
+  display: flex; 
+  gap: 1.5rem; 
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  display: flex; 
+  align-items: center; 
+  gap: 1.5rem; 
+  min-width: 300px;
+  padding: 1.5rem 2rem; 
+  border-left: 4px solid var(--green-brand); 
+  /* CORRECCIÓN 3: SOMBRA RESTAURADA PARA LA TARJETA DE CAPITAL */
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.stat-icon-wrapper { 
+  width: 55px; 
+  height: 55px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  background-color: rgba(16, 185, 129, 0.1);
+  border-radius: 12px;
+}
+.stat-emoji { font-size: 1.8rem; }
+.stat-info { display: flex; flex-direction: column; gap: 0.3rem; }
+.stat-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+.stat-value { font-size: 1.6rem; }
+
+/* =========================================
+   LAYOUT: BARRA DE HERRAMIENTAS Y TABS
+========================================= */
+.panel-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.search-box { width: 300px; }
+
+.tabs-container { 
+  display: flex; 
+  gap: 0.5rem; 
+  border-bottom: 2px solid var(--border-color); 
+}
+
+.tab-btn {
+  background: transparent; 
+  border: none; 
+  color: var(--text-muted); 
+  font-size: 0.95rem; 
+  font-weight: 600; 
+  padding: 0.8rem 1.2rem; 
+  cursor: pointer;
+  position: relative; 
+  bottom: -2px;
+}
+
+.tab-btn.active { 
+  color: var(--orange-brand); 
+  border-bottom: 2px solid var(--orange-brand); 
+}
+
+/* =========================================
+   LAYOUT: GRILLA DE INVENTARIO (TABLA)
+========================================= */
+.inventory-grid-container { 
+  width: 100%; 
+  overflow-x: auto; 
+}
+
+/* CORRECCIÓN 4: Redujimos la cantidad de columnas de 6 a 5 (quitamos la de "Tipo") */
+.inventory-header, .inventory-row {
+  display: grid; 
+  grid-template-columns: 2fr 1fr 1fr 1fr 100px; 
+  gap: 1rem; 
+  padding: 1.2rem 1.5rem;
+  min-width: 700px;
+  align-items: center;
+}
+
+.inventory-header {
+  background-color: rgba(255,255,255,0.02); 
+  border-radius: 10px; 
+  margin-bottom: 0.8rem;
+  border-bottom: none; /* El header no lleva línea separadora fuerte */
+}
+
+/* CORRECCIÓN 2: Línea separadora ligeramente visible */
+.inventory-row { 
+  border-bottom: 1px solid rgba(255,255,255,0.08); 
+}
+
+/* Quitar la línea inferior del último elemento para que se vea limpio */
+.inventory-row:last-child {
+  border-bottom: none;
+}
+
+.inventory-row:hover { 
+  background-color: rgba(255,255,255,0.03); 
+  border-radius: 10px; 
+}
+
+.col-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+.cell-name { font-size: 1rem; }
+.cell-actions { display: flex; gap: 0.5rem; justify-content: center; }
+
+/* =========================================
+   COMPONENTES ESPECÍFICOS DE INVENTARIO
+========================================= */
+.badge { 
+  padding: 0.3rem 0.6rem; 
+  border-radius: 6px; 
+  font-size: 0.85rem; 
+  font-weight: 600; 
+}
+.badge-normal { background-color: rgba(255,255,255,0.1); }
+.badge-danger { 
+  background-color: rgba(239, 68, 68, 0.2); 
+  color: var(--red-brand); 
+  border: 1px solid rgba(239, 68, 68, 0.4); 
+}
+
+.empty-box { 
+  background-color: rgba(0,0,0,0.15); 
+  border: 1px dashed var(--border-light); 
+  border-radius: 12px; 
+  padding: 2rem; 
+}
+
+/* Modales específicos width y alineación */
+.modal-inventory { max-width: 500px; margin: auto !important; }
+
+/* CORRECCIÓN 4: Centrado vertical restaurado para el modal de eliminar */
+.modal-delete { max-width: 400px; text-align: center; margin: auto !important; } 
+
+/* =========================================
+   MEDIA QUERIES (RESPONSIVE INVENTARIO)
+========================================= */
+@media (max-width: 1024px) {
+  .stats-section { flex-wrap: wrap; }
+  .stat-card { flex: 1 1 calc(50% - 1rem); min-width: 250px; }
+  .grid-2-cols { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .stats-section { flex-direction: column; }
+  .stat-card { width: 100%; padding: 1rem; gap: 1rem; min-width: 0; }
+  .panel-toolbar { flex-direction: column; align-items: stretch; gap: 1rem; }
+  .tabs-container { overflow-x: auto; white-space: nowrap; padding-bottom: 5px; }
+  .search-box { width: 100%; }
+}

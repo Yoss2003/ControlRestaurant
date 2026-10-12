@@ -1,0 +1,104 @@
+<div class="modern-dashboard">
+  
+  <header class="dashboard-header">
+    <div class="title-wrapper">
+      <h1 class="main-title m-0">📊 Panel de Control</h1>
+      <p class="subtitle">Resumen de ventas y rendimiento del día de hoy.</p>
+    </div>
+    <button class="btn btn-primary" (click)="loadMetrics()">
+      🔄 Actualizar Datos
+    </button>
+  </header>
+
+  <!-- ESTADO DE CARGA / ERROR -->
+  <div *ngIf="isLoading" class="text-center text-muted" style="padding: 3rem;">
+    ⏳ Cargando métricas del negocio...
+  </div>
+  
+  <div *ngIf="errorMessage" class="text-center text-orange" style="padding: 3rem; background: rgba(249, 115, 22, 0.1); border-radius: var(--radius-md); border: 1px solid rgba(249, 115, 22, 0.3);">
+    ⚠️ {{ errorMessage }}
+  </div>
+
+  <ng-container *ngIf="!isLoading && !errorMessage && metrics">
+         
+    <!-- 1. TARJETAS DE KPIs (Resumen Superior) -->
+    <div class="metrics-grid">
+             
+      <!-- Tarjeta: Ventas Totales -->
+      <div class="metric-card">
+        <span class="metric-label">Ingresos Totales</span>
+        <div class="metric-value text-green">
+          S/ {{ metrics.totalSales | number:'1.2-2' }}
+        </div>
+      </div>
+
+      <!-- Tarjeta: Mesas Atendidas -->
+      <div class="metric-card">
+        <span class="metric-label">Mesas Atendidas</span>
+        <div class="metric-value" style="color: #3b82f6;">
+          {{ metrics.tablesServed }}
+        </div>
+      </div>
+
+      <!-- Tarjeta: Ticket Promedio -->
+      <div class="metric-card">
+        <span class="metric-label">Ticket Promedio</span>
+        <div class="metric-value" style="color: #f59e0b;">
+          S/ {{ metrics.averageTicket | number:'1.2-2' }}
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- 2. GRID DE DETALLES (Gráficos Nativos y Listas) -->
+    <div class="details-grid">
+             
+      <!-- Panel Izquierdo: Métodos de Pago -->
+      <div class="panel-section">
+        <h3 class="panel-section-title">Distribución de Pagos</h3>
+                 
+        <div *ngIf="metrics.salesByPaymentMethod?.length === 0" class="text-muted" style="font-style: italic; margin-top: 1rem;">
+          No hay pagos registrados hoy.
+        </div>
+
+        <div *ngFor="let method of metrics.salesByPaymentMethod" style="margin-top: 1.5rem;">
+          <div class="flex-between mb-1" style="color: #cbd5e1;">
+            <span class="font-bold">{{ method.methodName }}</span>
+            <span>S/ {{ method.total | number:'1.2-2' }} ({{ getPercentage(method.total) | number:'1.0-0' }}%)</span>
+          </div>
+          
+          <!-- Barra de Progreso CSS Nativa -->
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill"
+                 [ngStyle]="{
+                   'width': getPercentage(method.total) + '%',
+                   'background-color': method.methodName.includes('Yape') ? '#7c3aed' : 
+                                        method.methodName.includes('Plin') ? '#0ea5e9' : 
+                                        method.methodName.includes('Efectivo') ? '#3b82f6' : '#f59e0b'
+                 }">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Derecho: Top Platos -->
+      <div class="panel-section">
+        <h3 class="panel-section-title">Top 5 Platos más Vendidos</h3>
+                 
+        <div *ngIf="metrics.topDishes?.length === 0" class="text-muted" style="font-style: italic; margin-top: 1rem;">
+          Aún no se han servido platos hoy.
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+          <div *ngFor="let dish of metrics.topDishes; let i = index" class="top-dish-item">
+            <div class="top-dish-rank">#{{ i + 1 }}</div>
+            <div class="top-dish-name">{{ dish.dishName }}</div>
+            <div class="top-dish-qty">{{ dish.quantity }} und</div>                       
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+
+</div>

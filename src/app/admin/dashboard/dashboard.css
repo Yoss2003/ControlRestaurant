@@ -1,0 +1,102 @@
+/* =========================================
+   LAYOUT PRINCIPAL
+========================================= */
+.metrics-grid {
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+  gap: 1.5rem; 
+  margin-bottom: 2rem;
+}
+
+.details-grid {
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+  gap: 1.5rem;
+}
+
+/* =========================================
+   COMPONENTES ESPECÍFICOS DEL DASHBOARD
+========================================= */
+.metric-card {
+  background: var(--bg-dark); 
+  border: 1px solid var(--border-color); 
+  border-radius: var(--radius-lg); 
+  padding: 1.5rem;
+}
+
+.metric-label {
+  color: var(--text-muted); 
+  font-size: 0.9rem; 
+  text-transform: uppercase; 
+  font-weight: 600;
+}
+
+.metric-value {
+  font-size: 2.5rem; 
+  font-weight: 800; 
+  margin-top: 0.5rem;
+}
+
+.panel-section {
+  background: var(--bg-dark); 
+  border: 1px solid var(--border-color); 
+  border-radius: var(--radius-lg); 
+  padding: 1.5rem;
+}
+
+.panel-section-title {
+  margin-top: 0; 
+  color: var(--text-main); 
+  border-bottom: 1px solid var(--border-color); 
+  padding-bottom: 1rem;
+}
+
+/* =========================================
+   BARRAS DE PROGRESO (Métodos de Pago)
+========================================= */
+.progress-bar-container {
+  width: 100%; 
+  background-color: var(--bg-panel); 
+  border-radius: 999px; 
+  height: 10px; 
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%; 
+  border-radius: 999px; 
+  transition: width 1s ease-in-out;
+}
+
+/* =========================================
+   LISTA TOP PLATOS
+========================================= */
+.top-dish-item {
+  display: flex; 
+  align-items: center; 
+  background: var(--bg-panel); 
+  padding: 10px 15px; 
+  border-radius: var(--radius-md);
+}
+
+.top-dish-rank {
+  font-size: 1.5rem; 
+  font-weight: 900; 
+  color: #3b82f6; 
+  width: 40px;
+}
+
+.top-dish-name {
+  flex: 1; 
+  color: var(--text-main); 
+  font-weight: 600;
+}
+
+.top-dish-qty {
+  background: var(--green-brand); 
+  color: #fff; 
+  padding: 4px 12px; 
+  border-radius: 20px; 
+  font-weight: bold; 
+  font-size: 0.85rem;
+}

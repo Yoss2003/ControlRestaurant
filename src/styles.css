@@ -1,0 +1,289 @@
+/* =========================================
+   1. VARIABLES GLOBALES Y TIPOGRAFÍA
+========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Paleta de Colores */
+  --bg-dark: #0f172a;        
+  --bg-panel: #1e293b;       
+  --bg-input: #334155;       
+  --border-color: #334155;   
+  --border-light: #475569;   
+  --text-main: #f8fafc;      
+  --text-muted: #94a3b8;     
+  --orange-brand: #f97316;   
+  --orange-hover: #ea580c;
+  --green-brand: #10b981;    
+  --red-brand: #ef4444;
+  --red-hover: #dc2626;
+  
+  /* Radios y Sombras (Formas) */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --shadow-panel: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent !important;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-dark);
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text-main);
+}
+
+/* =========================================
+   2. SCROLLBARS Y UTILIDADES GLOBALES
+========================================= */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background-color: var(--bg-input);
+  border-radius: 10px;
+  border: 2px solid var(--bg-panel);
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--border-light); }
+
+.w-100 { width: 100%; }
+.text-center { text-align: center; }
+.text-orange { color: var(--orange-brand); }
+.text-green { color: var(--green-brand); }
+.text-muted { color: var(--text-muted); }
+.font-bold { font-weight: 700; }
+.m-0 { margin: 0; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.mb-4 { margin-bottom: 2rem; }
+.mt-0 { margin-top: 0; }
+.mt-3 { margin-top: 1.5rem; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.grid-2-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+/* =========================================
+   3. PANELES, TEXTOS Y CONTENEDORES
+========================================= */
+.modern-dashboard {
+  padding: 2rem 2.5rem;
+  max-width: 1600px;         
+  margin: 0 auto;            
+  min-height: 100vh;
+}
+
+.modern-panel {
+  background-color: var(--bg-panel); 
+  border: 1px solid rgba(255, 255, 255, 0.05); 
+  border-radius: var(--radius-xl);
+  padding: 1.8rem; 
+  box-shadow: var(--shadow-panel); 
+}
+
+.dashboard-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
+  padding-bottom: 1.5rem; 
+  margin-bottom: 2rem;
+}
+
+.main-title { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
+.subtitle { color: var(--text-muted); margin-top: 0.4rem; font-size: 0.95rem; }
+.panel-title { font-size: 1.25rem; font-weight: 700; color: #fff; }
+
+/* =========================================
+   4. FORMULARIOS (INPUTS Y SELECTS)
+========================================= */
+.modern-label { 
+  display: block; 
+  font-size: 0.85rem; 
+  font-weight: 600; 
+  color: var(--text-muted); 
+  margin-bottom: 0.5rem; 
+}
+
+.modern-input, select {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  border: 1px solid var(--border-light);
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.modern-input:focus, select:focus {
+  outline: none;
+  border-color: var(--orange-brand);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.modern-input:-webkit-autofill,
+.modern-input:-webkit-autofill:hover, 
+.modern-input:-webkit-autofill:focus, 
+.modern-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--bg-dark) inset !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.highlight-input { 
+  background-color: rgba(249, 115, 22, 0.05); 
+  border-color: rgba(249, 115, 22, 0.3); 
+  color: var(--orange-brand); 
+  font-weight: 600; 
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem top 50%;
+  background-size: 0.65rem auto;
+  cursor: pointer;
+  padding-right: 2.5rem;
+}
+
+select option { background-color: var(--bg-panel); color: var(--text-main); }
+
+/* =========================================
+   5. SISTEMA ESTÁNDAR DE BOTONES
+========================================= */
+/* Forma base de cualquier botón */
+.btn {
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem; 
+  font-weight: 700;
+  cursor: pointer; 
+  transition: all 0.2s ease; 
+  border: none;
+  font-family: inherit;
+}
+
+.btn:focus { outline: none; }
+
+/* Botón Primario (Naranja - Acción principal) */
+.btn-primary {
+  background-color: var(--orange-brand); 
+  color: #fff; 
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+}
+.btn-primary:hover:not(:disabled) { 
+  background-color: var(--orange-hover); 
+  transform: translateY(-2px); 
+}
+
+/* Botón Secundario (Transparente/Borde - Cancelar) */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+  font-weight: 600;
+}
+.btn-secondary:hover:not(:disabled) { 
+  background-color: rgba(255, 255, 255, 0.05); 
+  color: #fff; 
+}
+
+/* Botón Peligro (Rojo - Eliminar) */
+.btn-danger {
+  background-color: var(--red-brand); 
+  color: #fff; 
+}
+.btn-danger:hover:not(:disabled) { 
+  background-color: var(--red-hover); 
+  transform: translateY(-2px); 
+}
+
+/* Botones Deshabilitados Globales */
+.btn:disabled {
+  background-color: var(--bg-input) !important; 
+  color: #64748b !important;            
+  cursor: not-allowed !important;
+  border: 1px solid transparent !important; 
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Botones Pequeños de Icono (Para tablas) */
+.btn-icon {
+  width: 34px; height: 34px; 
+  padding: 0; 
+  border-radius: var(--radius-sm); 
+  background: transparent;
+  font-size: 1rem;
+  border: none; /* CORRECCIÓN 1: Quitamos los bordes por defecto para que se vean más limpios */
+}
+.btn-icon-edit { color: var(--text-main); }
+.btn-icon-edit:hover { background: var(--bg-input); }
+.btn-icon-danger { color: var(--red-brand); }
+.btn-icon-danger:hover { background: var(--red-brand); color: #fff; }
+
+/* Botón Cerrar 'X' */
+.btn-close {
+  background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; 
+  cursor: pointer; line-height: 1; padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); transition: all 0.2s;
+}
+.btn-close:hover { color: var(--red-brand); background-color: rgba(239, 68, 68, 0.1); }
+
+/* =========================================
+   6. MODALES GLOBALES
+========================================= */
+body.modal-open { overflow: hidden; }
+
+.modal-overlay { 
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+  background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); 
+  display: flex; justify-content: center; align-items: center; /* CORRECCIÓN 4: Alineación en el centro por defecto */
+  overflow-y: auto; z-index: 9999; padding: 2rem 1rem; 
+}
+
+.modal-content { 
+  background-color: var(--bg-panel); 
+  border: 1px solid rgba(255,255,255,0.1); 
+  border-radius: var(--radius-xl); 
+  width: 100%; 
+  margin: auto; /* Permite que flexbox lo centre perfectamente */
+  display: flex; flex-direction: column; 
+  box-shadow: var(--shadow-modal); 
+  overflow: hidden;
+  max-height: 90vh; /* Evita que el modal sea más grande que la pantalla */
+}
+
+.modal-header { 
+  display: flex; justify-content: space-between; align-items: center; 
+  padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); 
+}
+
+.modal-body { padding: 1.5rem; overflow-y: auto; }
+
+.modal-footer { 
+  display: flex; gap: 1rem; padding: 1.5rem; 
+  border-top: 1px solid rgba(255,255,255,0.08); 
+  background-color: rgba(15, 23, 42, 0.5); 
+  justify-content: flex-end; 
+}
+
+/* =========================================
+   7. TOASTS GLOBALES
+========================================= */
+.toast { 
+  position: fixed; bottom: 20px; right: 20px; padding: 1rem 1.5rem; 
+  border-radius: var(--radius-md); color: white; font-weight: 600; 
+  z-index: 9999; box-shadow: var(--shadow-panel); 
+}
+.toast-success { background-color: var(--green-brand); } 
+.toast-error { background-color: var(--red-brand); }

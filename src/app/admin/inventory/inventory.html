@@ -1,0 +1,232 @@
+<div class="modern-dashboard">
+  
+  <!-- ENCABEZADO -->
+  <header class="dashboard-header">
+    <div class="title-wrapper">
+      <h1 class="main-title">Control de <span class="text-orange">Inventario</span></h1>
+      <p class="subtitle">Gestiona tus alimentos, mermas, costos unitarios y capital invertido.</p>
+    </div>
+    <button class="btn btn-primary" (click)="openModal()">+ Nuevo Insumo</button>
+  </header>
+
+  <!-- TARJETA DE ESTADÍSTICAS -->
+  <div class="stats-section">
+    <div class="stat-card modern-panel">
+      <div class="stat-icon-wrapper"><span class="stat-emoji">💰</span></div>
+      <div class="stat-info">
+        <span class="stat-label text-muted font-bold">CAPITAL EN INSUMOS</span>
+        <span class="stat-value text-green font-bold">S/ {{ totalCapital | number:'1.2-2' }}</span> 
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL PRINCIPAL -->
+  <main class="modern-panel">
+    
+    <div class="panel-toolbar mb-4">
+      <div class="tabs-container">
+        <button class="tab-btn" [class.active]="activeTab === 'Insumo'" (click)="setTab('Insumo')">🍅 Insumos (Alimentos)</button>
+        <button class="tab-btn" [class.active]="activeTab === 'Utensilio'" (click)="setTab('Utensilio')">🔪 Utensilios / Equipos</button>
+      </div>
+      <div class="search-box">
+        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="filterData()" placeholder="Buscar en inventario..." class="modern-input w-100">
+      </div>
+    </div>
+
+    <!-- TABLA DE INVENTARIO -->
+    <div class="inventory-grid-container">
+      <div class="inventory-header">
+        <div class="col-header text-muted font-bold">Nombre</div>
+        <div class="col-header text-muted font-bold text-center">Stock Actual</div>
+        <div class="col-header text-muted font-bold text-center">Costo Promedio</div>
+        <div class="col-header text-muted font-bold text-center">Valor Invertido</div>
+        <div class="col-header text-muted font-bold text-center">Acciones</div>
+      </div>
+
+      <div class="inventory-row" *ngFor="let item of filteredIngredients">
+        <div class="cell-name font-bold">{{ item.name }}</div>
+        
+        <div class="cell-stock text-center">
+          <span class="badge" [class.badge-danger]="item.currentStock <= (item.minimumStock || 0)" [class.badge-normal]="item.currentStock > (item.minimumStock || 0)">
+            {{ item.currentStock }} {{ item.unitOfMeasure }}
+          </span>
+        </div>
+        
+        <div class="cell-cost text-center text-muted">S/ {{ item.unitCost | number:'1.2-2' }}</div>
+        <div class="cell-total text-center text-green font-bold">
+          S/ {{ (item.currentStock * item.unitCost) | number:'1.2-2' }}
+        </div>
+        
+        <div class="cell-actions">
+          <button class="btn-icon btn-icon-edit" title="Editar" (click)="editIngredient(item)">✏️</button>
+          <button class="btn-icon btn-icon-danger" title="Eliminar" (click)="confirmDelete(item)">✖</button>
+        </div>
+      </div>
+
+      <div *ngIf="filteredIngredients?.length === 0" class="empty-box mt-3">
+        <p class="empty-text m-0 text-muted">No hay elementos registrados en esta categoría o búsqueda.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL DE CREACIÓN / EDICIÓN                -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" *ngIf="showModal">
+    <div class="modal-content modal-inventory">
+      <div class="modal-header">
+        <h3 class="panel-title m-0">{{ isEditing ? 'Editar o Reponer Stock' : 'Registrar Nuevo Elemento' }}</h3>
+        <button class="btn-close" (click)="closeModal()">✖</button>
+      </div>
+      
+      <div class="modal-body">
+        
+        <div class="mb-3">
+          <div class="flex-between mb-1">
+            <label class="modern-label m-0">Nombre del Elemento</label>
+            <div class="flex-between" style="gap: 0.4rem;">
+              <input type="checkbox" [(ngModel)]="currentIngredient.isPerishable" id="perishableCheck" style="width: 16px; height: 16px; accent-color: var(--orange-brand);">
+              <label class="modern-label m-0" for="perishableCheck" style="cursor: pointer; font-size: 0.8rem;">¿Es Perecible?</label>
+            </div>
+          </div>
+          <input type="text" [(ngModel)]="currentIngredient.name" class="modern-input w-100" placeholder="Ej: Tomate, Sartén...">
+        </div>
+        
+        <div class="grid-2-cols mb-3">
+          <div>
+            <label class="modern-label">Categoría</label>
+            <select [(ngModel)]="currentIngredient.category" (change)="onCategoryChange()" class="modern-input w-100" [disabled]="isEditing">
+              <option value="" disabled selected hidden>SELECCIONE</option>
+              <option value="Insumo">Insumo (Alimento)</option>
+              <option value="Utensilio">Utensilio / Equipo</option>
+            </select>
+          </div>
+          <div>
+            <label class="modern-label">Unidad Base</label>
+            <select [(ngModel)]="currentIngredient.unitOfMeasure" class="modern-input w-100" [disabled]="isEditing">
+              <option value="" disabled selected hidden>SELECCIONE</option>
+              <option value="kg">Kilogramos (kg)</option>
+              <option value="g">Gramos (g)</option>
+              <option value="l">Litros (l)</option>
+              <option value="ml">Mililitros (ml)</option>
+              <option value="und">Unidades (und)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ===================================== -->
+        <!-- VISTA SI ESTÁ CREANDO UN INSUMO NUEVO -->
+        <!-- ===================================== -->
+        <div *ngIf="!isEditing">
+          <div class="grid-2-cols mb-1">
+            <div>
+              <label class="modern-label">Cantidad Inicial (Stock)</label>
+              <input type="number" [(ngModel)]="currentIngredient.currentStock" (ngModelChange)="calculateUnitCost()" class="modern-input w-100" placeholder="0" min="0" step="0.01" oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+            </div>
+            <div>
+              <label class="modern-label">Costo Total Pagado (S/)</label>
+              <input type="number" [(ngModel)]="totalCostInput" (ngModelChange)="calculateUnitCost()" class="modern-input w-100 highlight-input" placeholder="0.00" min="0" step="0.01" oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- ===================================== -->
+        <!-- VISTA SI ESTÁ EDITANDO / REPONIENDO   -->
+        <!-- ===================================== -->
+        <div *ngIf="isEditing">
+          
+          <!-- TARJETA DE ESTADO ACTUAL MEJORADA -->
+          <div class="mb-3" style="background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden;">
+            <div style="background-color: rgba(255, 255, 255, 0.03); padding: 0.6rem 1rem; border-bottom: 1px solid var(--border-color); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700;">
+              Estado Actual en Sistema
+            </div>
+            <div class="grid-2-cols" style="padding: 1rem; gap: 1rem;">
+              <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                <span class="text-muted" style="font-size: 0.85rem;">Stock Disponible</span>
+                <span style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">
+                  {{ originalIngredient.currentStock }} 
+                  <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: normal;">{{ currentIngredient.unitOfMeasure }}</span>
+                </span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.2rem; border-left: 1px solid var(--border-color); padding-left: 1rem;">
+                <span class="text-muted" style="font-size: 0.85rem;">Costo Promedio</span>
+                <span style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">S/ {{ originalIngredient.unitCost | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- INPUTS PARA NUEVA COMPRA -->
+          <div class="grid-2-cols mb-1">
+            <div>
+              <label class="modern-label">Cantidad NUEVA Comprada</label>
+              <input type="number" [(ngModel)]="addedStock" (ngModelChange)="calculateUnitCost()" class="modern-input w-100" placeholder="0 (Dejar en blanco si no se compró)" min="0" step="0.01" oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+            </div>
+            <div>
+              <label class="modern-label">Costo de la NUEVA Compra (S/)</label>
+              <input type="number" [(ngModel)]="addedCost" (ngModelChange)="calculateUnitCost()" class="modern-input w-100 highlight-input" placeholder="0.00" min="0" step="0.01" oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje visual del nuevo precio calculado (Para ambas vistas) -->
+        <div class="mb-3" style="min-height: 20px;">
+          <div *ngIf="currentIngredient.unitCost > 0" class="text-muted" style="font-size: 0.85rem; padding-left: 5px;">
+            💡 Nuevo Costo Unitario Promedio: 
+            <strong class="text-green">S/ {{ currentIngredient.unitCost | number:'1.2-4' }}</strong> por {{ currentIngredient.unitOfMeasure || 'unidad' }}
+          </div>
+        </div>
+
+        <div class="grid-2-cols" *ngIf="currentIngredient.isPerishable">
+          <div>
+            <label class="modern-label">Fecha de Vencimiento</label>
+            <!-- AHORA ESTA FECHA CARGARÁ CORRECTAMENTE -->
+            <input type="date" [(ngModel)]="currentIngredient.expirationDate" class="modern-input w-100">
+          </div>
+          <div></div>
+        </div>
+
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary w-100" (click)="closeModal()">Cancelar</button>
+        <button class="btn btn-primary w-100" (click)="saveIngredient()" [disabled]="!currentIngredient.name || isSaving">
+          {{ isSaving ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL DE CONFIRMACIÓN DE ELIMINACIÓN       -->  
+  <!-- ========================================== -->
+  <div class="modal-overlay" *ngIf="showDeleteModal">
+    <div class="modal-content modal-delete">
+      <div class="modal-header">
+        <h3 class="panel-title m-0" style="color: var(--red-brand);">Confirmar Eliminación</h3>
+        <button class="btn-close" (click)="cancelDelete()">✖</button>
+      </div>
+      
+      <div class="modal-body">
+        <p class="m-0 text-muted" style="font-size: 1.1rem;">
+          ¿Estás seguro de que deseas eliminar <br>
+          <strong style="color: #fff; font-size: 1.2rem;">{{ itemToDelete?.name }}</strong>?
+        </p>
+        <p class="text-muted mt-3" style="font-size: 0.85rem;">
+          Esta acción solo lo ocultará del sistema (borrado lógico) para mantener el historial.
+        </p>
+      </div>
+      
+      <div class="modal-footer grid-2-cols">
+        <button class="btn btn-secondary w-100" (click)="cancelDelete()" [disabled]="isDeleting">Cancelar</button>
+        <button class="btn btn-danger w-100" (click)="executeDelete()" [disabled]="isDeleting">
+          {{ isDeleting ? 'Eliminando...' : 'Sí, eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOASTS -->
+  <div *ngIf="successMessage" class="toast toast-success">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="toast toast-error">{{ errorMessage }}</div>
+
+</div>

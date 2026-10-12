@@ -1,0 +1,495 @@
+<div class="modern-dashboard">
+  <!-- ENCABEZADO -->
+  <header class="dashboard-header">
+    <div class="title-wrapper">
+      <h1 class="main-title">Gestión de <span class="text-orange">Platos y Recetas</span></h1>
+      <p class="subtitle">Crea platos, asigna precios y define sus recetas exactas.</p>
+    </div>
+    <button class="btn btn-primary" (click)="startCreatingDish()">+ Nuevo Plato</button>
+  </header>
+
+  <!-- CONTENEDOR DE 2 COLUMNAS -->
+  <div class="grid-layout">
+         
+    <!-- COLUMNA IZQ: CATÁLOGO -->
+    <aside class="modern-panel">
+      <h3 class="panel-title">Catálogo de Platos</h3>
+      <div class="search-container">
+        <input type="text" placeholder="Buscar plato..." class="modern-input w-100">
+      </div>
+             
+      <!-- CORRECCIÓN 3: El div de la lista ahora tiene scroll (ver CSS) -->
+      <div class="list-container">
+        <div class="dish-item" *ngFor="let dish of dishes" (click)="selectDish(dish)" [class.active-item]="selectedDish?.id === dish.id">
+          <div class="dish-info">
+            <span class="dish-name">{{ dish.name }}</span>
+            <span class="dish-cat">{{ dish.category }}</span>
+          </div>
+                     
+          <div style="text-align: right; display: flex; flex-direction: column; gap: 2px;">
+            <span class="dish-price">S/ {{ dish.price | number:'1.2-2' }}</span>
+                         
+            <span style="font-size: 0.75rem; font-weight: 700;" 
+                  [style.color]="dish.maxAvailable > 0 ? 'var(--green-brand)' : 'var(--red-brand)'">
+              Disp: {{ dish.maxAvailable }}
+            </span>
+            <span style="font-size: 0.7rem; color: var(--text-muted);" title="Porciones configuradas en la receta">
+              Obj: {{ dish.yieldPortions }} porciones
+            </span>
+          </div>
+        </div>
+                 
+        <div *ngIf="dishes.length === 0" class="empty-text text-center">
+          No hay platos registrados.
+        </div>
+      </div>
+
+      <div class="mt-4" style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.2rem;">
+        <!-- CORRECCIÓN 1: Cambiado mousedown por click -->
+        <button type="button" class="btn btn-secondary w-100" 
+                 [disabled]="isLoadingDishes || dishes.length === 0"
+                (click)="openShoppingModal($event)">
+          {{ isLoadingDishes ? '⏳ Cargando catálogo...' : '🛒 Lista de Compras' }}                   
+        </button>
+      </div>
+    </aside>
+
+    <!-- COLUMNA DER: CREACIÓN / DETALLE -->
+    <main class="modern-panel" *ngIf="isCreatingDish || selectedDish">
+             
+      <div class="flex-between mb-3" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem;">
+        <h3 class="panel-title m-0">
+          {{ isCreatingDish ? '✨ Nuevo Plato' : '✏️ Editando: ' + (selectedDish?.name || '') }}
+        </h3>
+        <button type="button" class="btn-close" (click)="closeDashboard()">✖</button>
+      </div>
+
+      <!-- DATOS DEL PLATO -->
+      <section class="form-section">
+                 
+        <!-- OCULTO AL EDITAR -->
+        <div class="mb-3" *ngIf="isCreatingDish">
+          <label class="modern-label">Nombre del Plato</label>
+          <input type="text" [(ngModel)]="newDish.name" placeholder="Ej: Lomo Saltado" class="modern-input w-100">
+        </div>
+                 
+        <!-- SIEMPRE VISIBLE -->
+        <div class="grid-2-cols mb-3">
+          <div>
+            <label class="modern-label">Categoría</label>
+            <select [(ngModel)]="newDish.category" class="modern-input w-100">
+              <option value="Entradas">Entradas</option>
+              <option value="Platos de Fondo">Platos de Fondo</option>
+              <option value="Sopas">Sopas</option>
+              <option value="Bebidas">Bebidas</option>
+              <option value="Postres">Postres</option>
+            </select>
+          </div>
+          <div>
+            <label class="modern-label">Precio de Venta (S/)</label>
+            <input type="number"
+                  [(ngModel)]="newDish.price" 
+                  (ngModelChange)="calculateAnalysis('price')" 
+                  class="modern-input w-100 highlight-input"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+          </div>
+        </div>
+      </section>
+
+      <!-- RENDIMIENTO -->
+      <section class="yield-section">
+        <label class="modern-label">Simulador de Pedidos: ¿Cuántos platos prepararás?</label>
+        <div class="counter-control">
+          <button class="btn-counter" (click)="changeYield(-1)">-</button>
+          <input type="number"
+                  [(ngModel)]="recipePayload.yieldPortions" 
+                  class="modern-input text-center" 
+                  style="width: 90px;"
+                  min="1"
+                  step="1"
+                  oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+          <button class="btn-counter" (click)="changeYield(1)">+</button>
+        </div>
+      </section>
+
+      <!-- INGREDIENTES -->
+      <section class="ingredients-section mt-4">
+        <div class="flex-between mb-3">
+          <div style="display: flex; align-items: center;">
+            <h4 class="sub-title m-0">INGREDIENTES ({{ recipePayload.items.length }}/15)</h4>
+            <button type="button" class="btn-info" title="Ver Equivalencias" (click)="openEquivalenceModal()">i</button>
+          </div>
+          <button type="button" class="btn-text-orange" (click)="openIngredientModal()">+ Crear Insumo Faltante</button>
+        </div>
+
+        <!-- CORRECCIÓN 2: Las cabeceras ya se alinean bien con la nueva regla de CSS -->
+        <div class="ingredients-header" *ngIf="recipePayload.items.length > 0">
+          <div class="col-header text-muted font-bold">Ingrediente</div>
+          <div class="col-header text-muted font-bold text-center">Cantidad</div>
+          <div class="col-header text-muted font-bold">Unidad</div>
+          <div class="col-header text-muted font-bold text-center">Costo U.</div>
+          <div class="col-header text-muted font-bold text-center">Acción</div>
+        </div>
+
+        <!-- CORRECCIÓN 4: Nuevo contenedor para dar scroll a los ingredientes -->
+        <div class="ingredients-list-container">
+          <div class="ingredient-row" *ngFor="let item of recipePayload.items; let i = index; trackBy: trackByIndex">
+                       
+            <select [(ngModel)]="item.ingredientId" (ngModelChange)="calculateAnalysis()" class="modern-input">
+              <option *ngFor="let ing of availableIngredients" [ngValue]="ing.id">{{ ing.name }}</option>
+            </select>
+                       
+            <input type="number" 
+                   [(ngModel)]="item.totalQuantity" 
+                   (ngModelChange)="calculateAnalysis()" 
+                   class="modern-input text-center"
+                   [placeholder]="item.unit === 'unidades' ? '0' : '0.00'" 
+                   min="0"
+                   [step]="item.unit === 'unidades' ? '1' : '0.001'"
+                   oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+                       
+            <select [(ngModel)]="item.unit" (ngModelChange)="calculateAnalysis()" class="modern-input">
+              <option *ngFor="let u of allowedUnits" [value]="u">{{ u }}</option>
+            </select>
+
+            <div class="modern-input text-center text-muted font-bold" style="background-color: transparent; border: none; padding: 0.75rem 0;">
+              S/ {{ getIngredientCost(item.ingredientId) | number:'1.2-2' }}
+            </div>
+            
+            <!-- Aseguramos que el botón de eliminar esté centrado en su columna -->
+            <div style="text-align: center;">
+              <button class="btn-icon btn-icon-danger" (click)="removeIngredientRow(i)">✖</button>
+            </div>
+          </div>
+        </div>
+                 
+        <div *ngIf="recipePayload.items.length === 0" class="empty-box mb-3 mt-2">
+          <p class="empty-text m-0 text-muted">No has agregado ingredientes a esta receta.</p>
+        </div>
+
+        <button class="btn-add-row mt-2" (click)="addIngredientRow()" [disabled]="recipePayload.items.length >= 15">
+          + Agregar Ingrediente
+        </button>
+      </section>
+
+      <!-- ANÁLISIS FINANCIERO -->
+      <section class="financial-analysis-panel mt-4 mb-4">
+        <h4 class="sub-title m-0 mb-3">Análisis Inteligente</h4>
+        <div class="analysis-grid">
+          <div class="analysis-card">
+            <span class="analysis-label">Costo por Porción</span>
+            <span class="analysis-value" style="color: #fff;">S/ {{ liveRecipeCost | number:'1.2-2' }}</span>
+          </div>
+          <div class="analysis-card">
+            <span class="analysis-label">Precio Sugerido (33% ideal)</span>
+            <span class="analysis-value text-orange">S/ {{ suggestedPrice | number:'1.2-2' }}</span>
+          </div>
+          <div class="analysis-card" [style.border-color]="marginColor" [style.background]="marginColor + '15'">
+            <span class="analysis-label">Tu Margen Real</span>
+            <div class="margin-wrapper">
+              <span class="analysis-value" [style.color]="marginColor">{{ currentMargin | number:'1.1-1' }}%</span>
+              <span class="status-badge" [style.background]="marginColor">{{ marginStatus }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GUARDAR -->
+      <div class="mt-4 pt-4" style="border-top: 1px solid rgba(255,255,255,0.08);">
+        <button class="btn btn-primary w-100" (click)="saveFullDish()" [disabled]="!newDish.name || !newDish.price || isSavingDish">                    
+          {{ isSavingDish ? 'Guardando...' : (isCreatingDish ? '💾 Guardar Plato y Receta' : '💾 Actualizar Plato y Receta') }}
+        </button>
+      </div>
+    </main>
+         
+    <!-- ESTADO VACÍO DERECHO -->
+    <main class="modern-panel empty-state-panel" *ngIf="!isCreatingDish && !selectedDish">
+      <div class="text-center">
+        <span class="emoji-icon">🍲</span>
+        <p class="empty-text text-muted m-0">Selecciona un plato del catálogo para ver su receta o crea uno nuevo.</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL DE CREACIÓN RÁPIDA DE INGREDIENTES   -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" *ngIf="showIngredientModal">
+    <div class="modal-content modal-quick-ingredient">
+             
+      <div class="modal-header">
+        <h3 class="panel-title m-0">Crear Insumo Rápido</h3>
+        <button class="btn-close" (click)="closeIngredientModal()">✖</button>
+      </div>
+             
+      <div class="modal-body">
+        <div class="mb-3">
+          <div class="flex-between mb-1">
+            <label class="modern-label m-0">Nombre del Insumo</label>
+            <div class="flex-between" style="gap: 0.4rem;">
+              <input type="checkbox" [(ngModel)]="newQuickIngredient.isPerishable" id="quickPerishableCheck" style="width: 16px; height: 16px; accent-color: var(--orange-brand);">
+              <label class="modern-label m-0" for="quickPerishableCheck" style="cursor: pointer; font-size: 0.8rem;">¿Es Perecible?</label>
+            </div>
+          </div>
+          <input type="text" [(ngModel)]="newQuickIngredient.name" class="modern-input w-100" placeholder="Ej: Sillao">
+        </div>
+
+        <div class="grid-2-cols mb-3">
+          <div>
+            <label class="modern-label">Unidad de Medida</label>
+            <select [(ngModel)]="newQuickIngredient.baseUnit" class="modern-input w-100" [disabled]="isEditingQuickIngredient">
+              <option value="" disabled selected hidden>SELECCIONE</option>
+              <option *ngFor="let u of allowedUnits" [value]="u">{{ u }}</option>
+            </select>
+          </div>
+          
+          <!-- Si es NUEVO insumo -->
+          <div *ngIf="!isEditingQuickIngredient">
+            <label class="modern-label">Cantidad Adquirida (Stock)</label>
+            <input type="number" 
+                  [(ngModel)]="newQuickIngredient.initialStock" 
+                  class="modern-input w-100" 
+                  placeholder="Ej: 30"
+                  min="0"
+                  step="0.01"
+                  oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+          </div>
+        </div>
+
+        <!-- ===================================== -->
+        <!-- VISTA SI ESTÁ EDITANDO / REPONIENDO   -->
+        <!-- ===================================== -->
+        <div *ngIf="isEditingQuickIngredient">
+          <!-- TARJETA DE ESTADO ACTUAL MEJORADA -->
+          <div class="mb-3" style="background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden;">
+            <div style="background-color: rgba(255, 255, 255, 0.03); padding: 0.6rem 1rem; border-bottom: 1px solid var(--border-color); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700;">
+              Estado Actual en Sistema
+            </div>
+            <div class="grid-2-cols" style="padding: 1rem; gap: 1rem;">
+              <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                <span class="text-muted" style="font-size: 0.85rem;">Stock Disponible</span>
+                <span style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">
+                  <!-- Necesitaríamos pasar el stock original al editar para mostrarlo aquí. 
+                       Por simplicidad en este modal rápido, mostramos el valor que cargó inicialmente -->
+                  {{ newQuickIngredient.initialStock }} 
+                  <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: normal;">{{ newQuickIngredient.baseUnit }}</span>
+                </span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.2rem; border-left: 1px solid var(--border-color); padding-left: 1rem;">
+                <span class="text-muted" style="font-size: 0.85rem;">Costo Total</span>
+                <span style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">S/ {{ newQuickIngredient.totalCost | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="grid-2-cols mb-3">
+             <!-- Como este es un modal "Rápido" en la vista de recetas, usualmente solo editan el nombre o corrigen stock. 
+                  Si queremos reponer stock, deberían ir al módulo de Inventario completo. 
+                  Para mantenerlo simple aquí, dejamos que editen el stock/costo total directamente. -->
+             <div>
+              <label class="modern-label">Corregir Stock Total</label>
+              <input type="number" [(ngModel)]="newQuickIngredient.initialStock" class="modern-input w-100" placeholder="0" min="0" step="0.01" oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+            </div>
+             <div>
+              <label class="modern-label">Corregir Costo Total (S/)</label>
+              <input type="number" [(ngModel)]="newQuickIngredient.totalCost" class="modern-input w-100 highlight-input" placeholder="0.00" min="0" step="0.01" oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Si NO está editando (Creando nuevo) -->
+        <div class="grid-2-cols mb-3" *ngIf="!isEditingQuickIngredient">
+          <div>
+            <label class="modern-label">Costo Total de la Compra (S/)</label>
+            <input type="number" 
+                  [(ngModel)]="newQuickIngredient.totalCost" 
+                  class="modern-input w-100 highlight-input" 
+                  placeholder="Ej: 15.00"
+                  min="0"
+                  step="0.01"
+                  oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+          </div>
+          <div style="display: flex; flex-direction: column; justify-content: center; padding-top: 0.5rem;">
+            <label class="modern-label m-0" style="font-size: 0.75rem;">Costo Unitario Real</label>
+            <span class="text-green font-bold" style="font-size: 1.1rem;">
+              S/ {{ (newQuickIngredient.initialStock > 0 ? (newQuickIngredient.totalCost / newQuickIngredient.initialStock) : (newQuickIngredient.totalCost || 0)) | number:'1.2-2' }} 
+              <small class="text-muted" style="font-size: 0.75rem; font-weight: 500;">
+                por {{ newQuickIngredient.baseUnit || 'unidad' }}
+              </small>
+            </span>
+          </div>
+        </div>
+
+        <!-- Mensaje de costo unitario cuando se edita -->
+        <div *ngIf="isEditingQuickIngredient && newQuickIngredient.initialStock > 0" class="mb-3">
+             <div class="text-muted" style="font-size: 0.85rem; padding-left: 5px;">
+                💡 Nuevo Costo Unitario Calculado: 
+                <strong class="text-green">S/ {{ (newQuickIngredient.totalCost / newQuickIngredient.initialStock) | number:'1.2-4' }}</strong> por {{ newQuickIngredient.baseUnit || 'unidad' }}
+              </div>
+        </div>
+
+        <div class="grid-2-cols" *ngIf="newQuickIngredient.isPerishable">
+          <div>
+            <label class="modern-label">Fecha de Vencimiento</label>
+            <input type="date" [(ngModel)]="newQuickIngredient.expirationDate" class="modern-input w-100">
+          </div>
+          <div></div>
+        </div>
+
+        <hr style="border-color: rgba(255,255,255,0.08); margin: 1.5rem 0;">
+                 
+        <div>
+          <h4 class="modern-label" style="color: #fff; margin-bottom: 0.8rem;">Insumos Registrados</h4> 
+          
+          <!-- Cabecera de la mini tabla -->
+          <div class="mini-table-header" *ngIf="availableIngredients.length > 0">
+            <div>Insumo</div>
+            <div class="text-center">Acción</div>
+          </div>
+
+          <!-- Contenedor con Scroll (Mantiene el límite de altura) -->
+          <div style="max-height: 155px; overflow-y: auto; overflow-x: hidden; padding-right: 0.5rem;" class="custom-scroll">
+                         
+            <!-- Fila estructurada como mini-tabla -->
+            <div *ngFor="let ing of availableIngredients" class="mini-table-row">
+              <span style="font-size: 0.9rem; font-weight: 500;">{{ ing.name }}</span>
+              
+              <div style="display: flex; gap: 0.4rem; justify-content: center;">
+                <button type="button" class="btn-icon btn-icon-edit" (click)="editQuickIngredient(ing)" title="Editar">✏️</button>
+                <button type="button" class="btn-icon btn-icon-danger" (click)="deleteQuickIngredient(ing.id)" title="Eliminar">✖</button>
+              </div>
+            </div>
+                         
+            <div *ngIf="availableIngredients.length === 0" class="text-center text-muted" style="font-size: 0.85rem; padding: 1rem 0;">
+              Aún no tienes insumos registrados.
+            </div>
+          </div>
+        </div>
+      </div>
+             
+      <div class="modal-footer">
+        <button class="btn btn-secondary w-100" (click)="isEditingQuickIngredient ? resetQuickForm() : closeIngredientModal()" [disabled]="isSavingQuickIngredient">
+          {{ isEditingQuickIngredient ? 'Cancelar Edición' : 'Cerrar' }}
+        </button>
+        <button class="btn btn-primary w-100" (click)="saveQuickIngredient()" [disabled]="!newQuickIngredient.name || !newQuickIngredient.baseUnit || isSavingQuickIngredient">
+          {{ isSavingQuickIngredient ? 'Guardando...' : (isEditingQuickIngredient ? 'Actualizar Insumo' : 'Crear Insumo') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: LISTA DE COMPRAS                    -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" *ngIf="showShoppingModal">
+    <div class="modal-content modal-shopping">
+             
+      <div class="modal-header">
+        <div>
+          <h3 class="panel-title m-0">Lista de Compras</h3>
+          <p class="subtitle m-0" style="font-size: 0.85rem;">Insumos necesarios basados en el stock actual y mínimo requerido.</p>
+        </div>
+        <button class="btn-close" (click)="closeShoppingModal()">✖</button>
+      </div>
+             
+      <div class="modal-body">
+        <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 1rem; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto;">
+          <div style="min-width: 550px;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; gap: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 0.5rem;">
+              <div class="col-header text-muted font-bold">Ingrediente</div>
+              <div class="col-header text-muted font-bold text-center">Stock Act.</div>
+              <div class="col-header text-muted font-bold text-center">Stock Req.</div>
+              <div class="col-header text-muted font-bold text-center">Faltante</div>
+              <div class="col-header text-muted font-bold text-center">Unidad</div>
+              <div class="col-header text-muted font-bold" style="text-align: right;">Costo Aprox.</div>
+            </div>
+            
+            <div *ngFor="let item of shoppingListItems" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; gap: 0.5rem; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
+              <span class="font-bold" style="font-size: 0.9rem;">{{ item.ingredientName }}</span>
+              <span class="text-center text-muted" style="font-size: 0.85rem;">{{ item.currentStock }}</span>
+              <span class="text-center" style="font-size: 0.85rem;">{{ item.requiredStock }}</span>
+              <span class="text-center font-bold text-orange">{{ item.missingQuantity }}</span>
+              <span class="text-center text-muted" style="font-size: 0.85rem;">{{ item.unit }}</span>
+              <span style="text-align: right; font-size: 0.9rem;">S/ {{ item.estimatedCost | number:'1.2-2' }}</span>
+            </div>
+          </div> 
+        </div>
+        
+        <div class="flex-between mt-3 px-2">
+          <span class="text-muted" style="font-size: 0.75rem; font-style: italic;">
+            * Esto es un aproximado basado en el costo unitario del inventario.
+          </span>
+          <div style="text-align: right;">
+            <span class="text-muted" style="font-size: 0.8rem; text-transform: uppercase; display: block;">Costo Total a Gastar</span>
+            <span class="text-green font-bold" style="font-size: 1.3rem;">S/ {{ getTotalShoppingCost() | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+             
+      <div class="modal-footer">
+        <button class="btn btn-secondary w-100" (click)="closeShoppingModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: GUÍA DE EQUIVALENCIAS               -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" *ngIf="showEquivalenceModal">
+    <div class="modal-content modal-equivalence">
+             
+      <div class="modal-header">
+        <h3 class="panel-title m-0">📏 Guía de Equivalencias</h3>
+        <button class="btn-close" (click)="closeEquivalenceModal()">✖</button>
+      </div>
+             
+      <div class="modal-body">
+        <p class="text-muted" style="font-size: 0.9rem; margin-top: 0; margin-bottom: 1.5rem;">
+          Usa estos promedios estándar para convertir medidas caseras al sistema de tu inventario:
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                     
+          <!-- Líquidos -->
+          <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+            <strong style="display: block; margin-bottom: 0.5rem;">Líquidos (Agua, Cerveza, Aceite)</strong>
+            <div class="grid-2-cols text-muted" style="font-size: 0.9rem; gap: 0.5rem;">
+              <span>1 Taza</span> <span class="text-green font-bold" style="text-align: right;">250 ml</span>
+              <span>1 Cucharada</span> <span class="text-green font-bold" style="text-align: right;">15 ml</span>
+              <span>1 Chorro / Un poco</span> <span class="text-green font-bold" style="text-align: right;">20 ml</span>
+            </div>
+          </div>
+          
+          <!-- Sólidos -->
+          <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+            <strong style="display: block; margin-bottom: 0.5rem;">Sólidos (Arroz, Verduras, Ajo)</strong>
+            <div class="grid-2-cols text-muted" style="font-size: 0.9rem; gap: 0.5rem;">
+              <span>1 Taza</span> <span class="text-orange font-bold" style="text-align: right;">200 g (0.2 kg)</span>
+              <span>1 Cucharada</span> <span class="text-orange font-bold" style="text-align: right;">15 g - 20 g</span>
+            </div>
+          </div>
+          
+          <!-- Condimentos -->
+          <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+            <strong style="display: block; margin-bottom: 0.5rem;">Condimentos (Sal, Pimienta)</strong>
+            <div class="grid-2-cols text-muted" style="font-size: 0.9rem; gap: 0.5rem;">
+              <span>1 Cucharadita</span> <span class="font-bold text-main" style="text-align: right;">5 g</span>
+              <span>"Al gusto" / Pizca</span> <span class="font-bold text-main" style="text-align: right;">2 g - 5 g</span>
+            </div>
+          </div>
+        </div>
+      </div>
+             
+      <div class="modal-footer">
+        <button class="btn btn-secondary w-100" (click)="closeEquivalenceModal()">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOASTS -->
+  <div *ngIf="successMessage" class="toast toast-success">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="toast toast-error">{{ errorMessage }}</div>
+
+</div>

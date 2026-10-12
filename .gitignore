@@ -1,0 +1,22 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# Dependencias
+/node_modules
+
+# Archivos de compilación y salida de Angular
+/dist
+/.angular
+/out-tsc
+
+# Entornos y configuraciones locales
+/src/environments/environment.development.ts
+/src/environments/environment.ts
+
+# Logs y archivos del sistema operativo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

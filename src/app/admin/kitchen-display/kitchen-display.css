@@ -1,0 +1,111 @@
+/* =========================================
+   LAYOUT: DOS COLUMNAS (KDS)
+========================================= */
+.kds-layout { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 2rem; 
+  align-items: start; 
+}
+
+.kds-column { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 1.5rem; 
+}
+
+/* =========================================
+   ENCABEZADOS DE COLUMNA
+========================================= */
+.column-header { 
+  padding: 1rem; 
+  border-radius: var(--radius-md); 
+  text-align: center; 
+  font-weight: 800; 
+  font-size: 1.2rem; 
+  color: var(--text-main); 
+}
+.orange-header { 
+  background-color: var(--bg-panel); 
+  border-bottom: 3px solid var(--orange-brand); 
+}
+.blue-header { 
+  background-color: var(--bg-panel); 
+  border-bottom: 3px solid #3b82f6; 
+}
+
+/* =========================================
+   TARJETAS DE PEDIDO
+========================================= */
+.kds-card { 
+  background-color: var(--bg-panel); 
+  border-radius: var(--radius-lg); 
+  display: flex; 
+  flex-direction: column; 
+  box-shadow: var(--shadow-panel);
+}
+.border-orange { border: 1px solid var(--border-color); border-top: 4px solid var(--orange-brand); }
+.border-blue { border: 1px solid var(--border-color); border-top: 4px solid #3b82f6; }
+
+.kds-card-header { 
+  display: flex; align-items: center; padding: 1rem 1.5rem; 
+  border-bottom: 1px dashed var(--border-color); gap: 12px; 
+}
+.badge-mesa { 
+  background-color: var(--orange-brand); color: #fff; font-weight: 800; 
+  padding: 4px 12px; border-radius: var(--radius-sm); font-size: 0.9rem; 
+}
+.order-id { color: var(--text-muted); font-weight: bold; flex: 1; font-size: 0.95rem; }
+.order-time { color: var(--text-muted); font-size: 0.9rem; font-weight: 600;}
+
+.kds-card-body { padding: 1rem 1.5rem; flex-grow: 1; }
+
+.kds-item { 
+  display: flex; gap: 15px; padding: 10px 0; 
+  border-bottom: 1px solid rgba(255,255,255,0.03); 
+}
+.kds-item:last-child { border-bottom: none; }
+
+.item-qty { color: var(--orange-brand); font-weight: 900; font-size: 1.15rem; }
+.item-details { display: flex; flex-direction: column; }
+.item-name { font-weight: 700; font-size: 1.05rem; color: var(--text-main); }
+.item-notes { font-size: 0.85rem; color: var(--red-brand); font-style: italic; margin-top: 4px;}
+
+/* =========================================
+   ACORDEÓN DE ADICIONALES
+========================================= */
+.adicionales-wrapper { 
+  margin-top: 15px; border: 1px solid var(--red-brand); 
+  border-radius: var(--radius-md); overflow: hidden; 
+}
+.adicionales-toggle { 
+  background-color: rgba(239, 68, 68, 0.1); color: var(--red-brand); 
+  padding: 10px 15px; font-weight: 700; font-size: 0.9rem; 
+  display: flex; justify-content: space-between; cursor: pointer; 
+  user-select: none; transition: background-color 0.2s; 
+}
+.adicionales-toggle:hover { background-color: rgba(239, 68, 68, 0.2); }
+.adicionales-content { 
+  background-color: rgba(0, 0, 0, 0.2); padding: 5px 15px; 
+  border-top: 1px solid rgba(239, 68, 68, 0.2); 
+}
+
+/* =========================================
+   BOTONES INFERIORES
+========================================= */
+.kds-card-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+/* =========================================
+   RESPONSIVE DESIGN
+========================================= */
+@media (max-width: 768px) {
+  .kds-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+  .kds-card-header { flex-wrap: wrap; }
+}
+
+@media (max-width: 1024px) and (orientation: landscape) {
+  .kds-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+}

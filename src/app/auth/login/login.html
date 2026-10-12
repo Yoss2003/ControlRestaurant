@@ -1,0 +1,48 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>Panel Administrativo</h1>
+      <h2>Sonqo <span class="highlight">Restaurant</span></h2>
+      <p>Ingresa tus credenciales para continuar</p>
+    </div>
+
+    <!-- Si hay error, mostramos este mensaje -->
+    <div *ngIf="errorMessage" class="error-alert">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Formulario enlazado al objeto 'credentials' de TypeScript -->
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <div class="form-group">
+        <label for="username">Usuario</label>
+        <input 
+          type="text" 
+          id="username" 
+          name="username" 
+          [(ngModel)]="credentials.username" 
+          required 
+          placeholder="Ej: cocina"
+          [disabled]="isLoading"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          [(ngModel)]="credentials.password" 
+          required 
+          placeholder="••••••"
+          [disabled]="isLoading"
+        >
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="!loginForm.form.valid || isLoading">
+        <span *ngIf="!isLoading">Ingresar al Sistema</span>
+        <span *ngIf="isLoading">Verificando...</span>
+      </button>
+    </form>
+  </div>
+</div>

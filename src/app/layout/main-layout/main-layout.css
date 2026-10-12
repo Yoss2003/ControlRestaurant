@@ -1,0 +1,192 @@
+/* --- CONTENEDOR GENERAL --- */
+.app-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-dark, #0f172a);
+  color: #f8fafc;
+  font-family: inherit;
+}
+
+/* --- BARRA LATERAL FIJA --- */
+.app-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  background-color: #1e293b;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  z-index: 1000;
+  transition: width 0.3s ease, transform 0.3s ease;
+  overflow: visible; 
+}
+
+.app-sidebar.collapsed {
+  width: 80px;
+}
+
+/* --- CONTENEDOR INTERNO PARA EL SCROLL --- */
+.sidebar-inner-scroll {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow-y: auto;  
+  overflow-x: hidden;
+}
+
+/* --- BOTÓN FLOTANTE --- */
+.toggle-btn {
+  position: absolute;
+  top: 25px;
+  right: -14px; 
+  background-color: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1010; 
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.4);
+  transition: color 0.2s, background-color 0.2s, right 0.3s ease, width 0.3s ease, height 0.3s ease;
+}
+
+.toggle-btn:hover {
+  color: #fff;
+  background-color: #334155;
+}
+
+.chevron {
+  display: inline-block;
+  font-size: 0.75rem;
+  transition: transform 0.3s ease;
+}
+
+.chevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* --- HEADER Y NAVEGACIÓN --- */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: 1.2rem 1rem;
+  height: 70px;
+  box-sizing: border-box;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.logo-icon { font-size: 1.5rem; min-width: 32px; text-align: center; }
+.logo-text { font-size: 1.2rem; font-weight: 700; color: #fff; transition: opacity 0.2s ease; }
+.app-sidebar.collapsed .logo-text { opacity: 0; pointer-events: none; }
+.text-orange { color: #f97316; }
+
+.sidebar-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.08);
+  margin: 0 1rem;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  flex-grow: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  color: #94a3b8;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover { background-color: rgba(255, 255, 255, 0.05); color: #fff; }
+.nav-item.active { background-color: rgba(249, 115, 22, 0.12); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.3); }
+.icon { font-size: 1.2rem; min-width: 24px; text-align: center; }
+.nav-text { transition: opacity 0.2s ease; }
+.app-sidebar.collapsed .nav-text { opacity: 0; pointer-events: none; }
+
+.sidebar-bottom {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.nav-item.logout:hover { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+/* --- CONTENIDO PRINCIPAL --- */
+.main-content {
+  flex: 1;
+  box-sizing: border-box;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* --- BACKDROP MÓVIL (Fondo Oscuro) --- */
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 990; /* Justo debajo del menú */
+}
+
+/* =========================================
+   DISEÑO MÓVIL Y TABLETS (Responsividad)
+========================================= */
+@media (max-width: 1024px) {
+  /* 1. Forzamos que la barra (normal o colapsada) mida 260px y se esconda COMPLETAMENTE fuera de la pantalla */
+  .app-sidebar,
+  .app-sidebar.collapsed {
+    width: 260px !important;
+    transform: translateX(-100%) !important;
+  }
+  
+  /* 2. Solo vuelve a entrar cuando la abres explícitamente */
+  .app-sidebar.mobile-open,
+  .app-sidebar.collapsed.mobile-open {
+    transform: translateX(0) !important;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.5) !important;
+  }
+
+  /* 3. El botón naranja flotante que te permite abrirla siempre asomando */
+  .app-sidebar:not(.mobile-open) .toggle-btn {
+    right: -40px !important;
+    width: 40px !important;
+    height: 40px !important;
+    background-color: #f97316 !important;
+    color: white !important;
+    border-radius: 0 10px 10px 0 !important;
+    display: flex !important;
+  }
+
+  /* 4. El contenido principal ocupa el 100% real sin quedar debajo de la barra */
+  .main-content {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    width: 100% !important;
+  }
+}

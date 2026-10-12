@@ -1,0 +1,84 @@
+<div class="app-wrapper">  
+  
+  <!-- FONDO OSCURO PARA MÓVILES (BACKDROP) -->
+  <div class="sidebar-backdrop" 
+       *ngIf="isMobile && isSidebarExpanded" 
+       (click)="closeSidebarOnMobile()">
+  </div>
+  
+  <!-- BARRA LATERAL ANIMADA -->
+  <aside class="app-sidebar" 
+         [class.collapsed]="!isMobile && !isSidebarExpanded"
+         [class.mobile-open]="isMobile && isSidebarExpanded">
+    
+    <!-- EL BOTÓN FLOTANTE -->
+    <button class="toggle-btn" (click)="toggleSidebar()">
+      <span class="chevron" [class.rotated]="!isSidebarExpanded">◀</span>
+    </button>
+
+    <!-- CONTENEDOR INTERNO PARA EL SCROLL -->
+    <div class="sidebar-inner-scroll">
+      <div class="sidebar-header">
+        <div class="logo-container">
+          <span class="logo-icon">🍔</span>
+          <span class="logo-text">Sonqo<span class="text-orange">App</span></span>
+        </div>
+      </div>
+      
+      <div class="sidebar-divider"></div>
+
+      <nav class="sidebar-nav">
+        <!-- Visible para Admin y SuperAdmin -->
+        <a *ngIf="['Admin', 'SuperAdmin'].includes(authService.getUserRole())" routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="closeSidebarOnMobile()">
+          <span class="icon">📊</span>
+          <span class="nav-text">Panel de Control</span>
+        </a>
+        
+        <!-- Visible para Admin y SuperAdmin -->
+        <a *ngIf="['Admin', 'SuperAdmin'].includes(authService.getUserRole())" routerLink="/inventario" routerLinkActive="active" class="nav-item" (click)="closeSidebarOnMobile()">
+          <span class="icon">📦</span>
+          <span class="nav-text">Inventario</span>
+        </a>
+        
+        <!-- Visible para Admin y SuperAdmin -->
+        <a *ngIf="['Admin', 'SuperAdmin'].includes(authService.getUserRole())" routerLink="/platos" routerLinkActive="active" class="nav-item" (click)="closeSidebarOnMobile()">
+          <span class="icon">🍲</span>
+          <span class="nav-text">Platos y Recetas</span>
+        </a>
+        
+        <!-- Visible para Admin, SuperAdmin y Waiter -->
+        <a *ngIf="['Admin', 'SuperAdmin', 'Waiter'].includes(authService.getUserRole())" routerLink="/pedidos" routerLinkActive="active" class="nav-item" (click)="closeSidebarOnMobile()">
+          <span class="icon">📝</span>
+          <span class="nav-text">Pedidos</span>
+        </a>
+        
+        <!-- Visible para Admin, SuperAdmin y Kitchen -->
+        <a *ngIf="['Admin', 'SuperAdmin', 'Kitchen'].includes(authService.getUserRole())" routerLink="/cocina" routerLinkActive="active" class="nav-item" (click)="closeSidebarOnMobile()">
+          <span class="icon">🍳</span>
+          <span class="nav-text">Cocina</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-bottom">
+        <a *ngIf="['Admin', 'SuperAdmin'].includes(authService.getUserRole())" href="#" class="nav-item" (click)="closeSidebarOnMobile()">
+          <span class="icon">⚙️</span>
+          <span class="nav-text">Ajustes</span>
+        </a>
+        
+        <a href="javascript:void(0)" class="nav-item logout" (click)="logout()">
+          <span class="icon">🚪</span>
+          <span class="nav-text">Cerrar Sesión</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="main-content" 
+       [style.marginLeft]="isMobile ? '0' : (isSidebarExpanded ? '260px' : '80px')" 
+       style="transition: margin-left 0.3s ease;">
+  
+       <!-- AQUÍ SE CARGARÁN LAS VISTAS PRIVADAS (Dashboard, Platos, etc) -->
+       <router-outlet></router-outlet>
+  </div>
+</div>

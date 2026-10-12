@@ -1,0 +1,392 @@
+<div class="modern-dashboard">
+  
+  <header class="dashboard-header">
+    <div class="title-wrapper">
+      <h1 class="main-title m-0">🗺️ Mapa de Mesas</h1>
+      <p class="subtitle">Selecciona una mesa para tomar un pedido o ver la cuenta actual.</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      + Nueva Mesa
+    </button>
+  </header>
+
+  <!-- ============================================== -->
+  <!-- MODAL DE NUEVA/EDITAR MESA -->
+  <div class="modal-overlay" *ngIf="showModal">
+    <div class="modal-content modal-table-gen">
+      
+      <div class="modal-header">
+        <h3 class="panel-title m-0">{{ isEditing ? 'Editar Mesa' : 'Agregar Nuevas Mesas' }}</h3>
+        <button class="btn-close" (click)="showModal = false">✖</button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- VISTA: CREACIÓN EN LOTE -->
+        <ng-container *ngIf="!isEditing">
+          <div class="mb-3">
+            <label class="modern-label">Cantidad de mesas a generar</label>
+            <input type="number" 
+                    [(ngModel)]="tableQuantity" 
+                    (ngModelChange)="generateTableConfigs()" 
+                    class="modern-input w-100"
+                    min="1" 
+                    max="50" 
+                    oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+          </div>
+          
+          <div class="tables-generator-list custom-scroll" *ngIf="newTablesConfig.length > 0">
+            <div *ngFor="let config of newTablesConfig" class="table-config-row">
+              <span class="auto-name-badge">{{ config.number }}</span>
+              <div class="m-0" style="flex: 1;">
+                <label class="modern-label" style="font-size: 0.75rem;">Capacidad (Personas)</label>
+                <input type="number" 
+                      [(ngModel)]="config.capacity" 
+                      min="1" 
+                      step="1"
+                      class="modern-input w-100"
+                      oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+              </div>
+            </div>
+          </div>
+        </ng-container>
+        
+        <!-- VISTA: EDICIÓN INDIVIDUAL -->
+        <ng-container *ngIf="isEditing">
+          <div class="mb-3">
+            <label class="modern-label">Nombre de la Mesa</label>
+            <input type="text" [(ngModel)]="editTableNumber" class="modern-input w-100">
+          </div>
+          <div class="mb-3">
+            <label class="modern-label">Capacidad (Personas)</label>
+            <input type="number" 
+                    [(ngModel)]="editTableCapacity" 
+                    class="modern-input w-100"
+                    min="1" 
+                    step="1"
+                    oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+          </div>
+        </ng-container>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary w-100" (click)="showModal = false">Cancelar</button>
+        <button class="btn btn-primary w-100" (click)="saveTable()">Guardar</button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================== -->
+  <!-- GRID DE MESAS -->
+  <div *ngIf="isLoading" class="text-muted text-center" style="padding: 2rem;">Cargando mesas...</div>
+  
+  <div class="tables-grid" *ngIf="!isLoading">
+    <div *ngFor="let table of tables"
+         class="table-card"
+         [ngClass]="table.isAvailable ? 'status-free' : 'status-occupied'"
+         (click)="onTableClick(table, $event)">
+      
+      <!-- ENCABEZADO CON BOTONES DE ACCIÓN -->
+      <div class="table-header">
+        <h3 class="table-name">{{ table.number }}</h3>
+        <div class="table-actions">
+          <button class="btn-icon btn-icon-edit" (click)="openEditModal(table, $event)" title="Editar">✏️</button>
+          <button class="btn-icon btn-icon-danger" (click)="confirmDelete(table.id, $event)" title="Eliminar">✖</button>
+          <span class="table-capacity">👥 {{ table.capacity }}</span>
+        </div>
+      </div>
+      
+      <div class="table-body">
+        <div class="status-indicator"></div>
+        <span class="status-text">{{ table.isAvailable ? 'LIBRE' : 'OCUPADA' }}</span>
+      </div>
+      
+      <div class="table-footer">
+        <span *ngIf="table.isAvailable">👆 Toque para ordenar</span>
+        <span *ngIf="!table.isAvailable" style="color: var(--text-main); font-weight: 600;">🧾 Ver Cuenta</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================== -->
+  <!-- MODAL: TOMAR PEDIDO (MESA LIBRE) -->
+  <div class="modal-overlay" *ngIf="showMenuModal">
+    <div class="modal-content modal-order-take">
+      
+      <!-- Cabecera -->
+      <div class="modal-header">
+        <h3 class="panel-title m-0">📝 Tomar Pedido - {{ selectedTable?.number }}</h3>
+        <button (click)="closeModals()" class="btn-close">✖</button>
+      </div>
+      
+      <!-- Contenedor Dividido: Catálogo vs Carrito -->
+      <div class="order-layout modal-body">
+        
+        <!-- IZQUIERDA: Catálogo de Platos -->
+        <div class="menu-section custom-scroll">
+          <div *ngIf="dishes.length === 0" class="text-muted text-center" style="padding: 2rem;">
+            No hay platos disponibles.
+          </div>
+          <div class="dishes-grid">
+            <div class="dish-select-card"
+                 *ngFor="let dish of dishes"
+                 (click)="addToCart(dish)"
+                 [ngStyle]="{'opacity': dish.maxAvailable <= 0 ? '0.5' : '1', 'pointer-events': dish.maxAvailable <= 0 ? 'none' : 'auto'}">
+              
+              <div class="dish-img-placeholder">🍲</div>
+              <div class="dish-info">
+                <span class="dish-title">{{ dish.name }}</span>
+                <span class="dish-price">S/ {{ dish.price | number:'1.2-2' }}</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">
+                  Disponibles: {{ dish.maxAvailable }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DERECHA: La Comanda (Carrito) -->
+        <div class="cart-section">
+          <h4 style="margin-top: 0; color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Detalle del Pedido</h4>
+          
+          <div class="cart-items-container custom-scroll">
+            <div *ngIf="cart.length === 0" class="empty-cart-msg">
+              👆 Selecciona platos del menú
+            </div>
+            
+            <div class="cart-item" *ngFor="let item of cart; let i = index">
+              <div class="cart-item-header">
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-subtotal">S/ {{ item.subTotal | number:'1.2-2' }}</span>
+              </div>
+              
+              <div class="cart-item-controls">
+                <div class="qty-controls">
+                  <button type="button" class="qty-btn" (click)="updateQuantity(i, -1)">-</button>
+                  <span class="qty-number">{{ item.quantity }}</span>
+                  <button type="button" class="qty-btn"
+                          (click)="updateQuantity(i, 1)"
+                          [disabled]="item.quantity >= item.maxAvailable"
+                          [ngStyle]="{'opacity': item.quantity >= item.maxAvailable ? '0.3' : '1'}">+</button>
+                </div>
+                <button class="btn-icon btn-icon-danger" style="border: none;" (click)="removeFromCart(i)">✖</button>
+              </div>
+              <input type="text" class="notes-input" [(ngModel)]="item.notes" placeholder="Notas (ej. sin ají, bien cocido...)">
+            </div>
+          </div>
+
+          <div class="cart-footer">
+            <div class="cart-total">
+              <span>Total:</span>
+              <span class="text-green">S/ {{ cartTotal | number:'1.2-2' }}</span>
+            </div>
+            <button class="btn btn-primary w-100" style="padding: 1rem;" [disabled]="cart.length === 0" (click)="submitOrder()">
+              🚀 Enviar a Cocina
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================== -->
+  <!-- MODAL: CUENTA ACTIVA (EL TICKET SIN INGREDIENTES) -->
+  <div class="modal-overlay" *ngIf="showOrderDetailsModal">
+    <div class="modal-content modal-ticket">
+      
+      <div class="modal-header">
+        <h3 class="panel-title m-0">🧾 Cuenta - {{ selectedTable?.number }}</h3>
+        <button (click)="closeModals()" class="btn-close">✖</button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- ESTRUCTURA DEL TICKET -->
+        <div class="ticket-container">
+          <!-- Cabecera del ticket -->
+          <div class="ticket-row ticket-header-row">
+            <span style="text-align: center;">Cant</span>
+            <span>Plato / Producto</span>
+            <span style="text-align: right;">P. Unit</span>
+            <span style="text-align: right;">Importe</span>
+          </div>
+          
+          <!-- Lista de platos -->
+          <div class="ticket-row" *ngFor="let item of activeOrderDetails.items">
+            <span style="text-align: center; color: var(--orange-brand); font-weight: bold;">{{ item.quantity }}</span>
+            <span style="color: var(--text-main); display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+              {{ item.dishName }}
+              <span *ngIf="item.isAdicional" style="font-size: 0.75rem; color: #a855f7; font-style: italic;">(Adicional)</span>
+            </span>
+            <span style="text-align: right;">S/ {{ item.unitPrice | number:'1.2-2' }}</span>
+            <span style="text-align: right; color: var(--text-main);">S/ {{ item.subTotal | number:'1.2-2' }}</span>
+          </div>
+
+          <!-- Total Vertical -->
+          <div class="ticket-total-container">
+            <div class="ticket-total-row">
+              <span>TOTAL A PAGAR:</span>
+              <span class="total-amount">S/ {{ activeOrderDetails?.totalAmount | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button class="btn btn-secondary" style="border-color: var(--orange-brand); color: var(--orange-brand); flex: 1;" (click)="showOrderDetailsModal = false; showMenuModal = true">
+          + Añadir Adicional
+        </button>
+        <button class="btn btn-primary"
+                style="flex: 2; transition: all 0.3s;"
+                [disabled]="checkoutButtonState === 'IN_KITCHEN'"
+                [ngStyle]="{
+                  'background-color': checkoutButtonState === 'IN_KITCHEN' ? 'var(--bg-input)' : (checkoutButtonState === 'READY_TO_DELIVER' ? '#f59e0b' : 'var(--green-brand)'),
+                  'color': checkoutButtonState === 'IN_KITCHEN' ? 'var(--text-muted)' : '#fff'
+                }"
+                (click)="handleMainAction()">
+             
+          <!-- El texto cambia mágicamente según el estado de la orden -->
+          {{ checkoutButtonState === 'IN_KITCHEN' ? '🍳 Platos en Cocina...' : 
+             (checkoutButtonState === 'READY_TO_DELIVER' ? '🚶 Confirmar Entrega' : '💰 Cobrar y Liberar Mesa') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================== -->
+  <!-- MODAL: COBRO Y MÉTODOS DE PAGO (CAJA) -->
+  <div class="modal-overlay" *ngIf="showCheckoutModal">
+    <div class="modal-content modal-checkout">
+      
+      <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
+        <h3 class="panel-title m-0" style="text-align: center; width: 100%;">💰 Procesar Pago</h3>
+        <button (click)="showCheckoutModal = false; showOrderDetailsModal = true" class="btn-close">✖</button>
+      </div>
+      
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <span style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Total a Cobrar</span>
+          <div style="font-size: 3rem; font-weight: 800; color: var(--green-brand); line-height: 1; margin-top: 0.5rem;">
+            S/ {{ activeOrderDetails?.totalAmount | number:'1.2-2' }}
+          </div>
+        </div>
+
+        <!-- SWITCH DE MODO DE PAGO -->
+        <div style="display: flex; gap: 8px; margin-bottom: 1.5rem; background: var(--bg-dark); padding: 6px; border-radius: var(--radius-md);">
+          <button style="flex: 1; padding: 8px; border-radius: var(--radius-sm); border: none; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                  [ngStyle]="{'background': !isSplitBill ? 'var(--bg-input)' : 'transparent', 'color': !isSplitBill ? '#fff' : 'var(--text-muted)'}" 
+                  (click)="setSplitBillMode(false)">
+            Pago Único
+          </button>
+          <button style="flex: 1; padding: 8px; border-radius: var(--radius-sm); border: none; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                  [ngStyle]="{'background': isSplitBill ? 'var(--bg-input)' : 'transparent', 'color': isSplitBill ? '#fff' : 'var(--text-muted)'}" 
+                  (click)="setSplitBillMode(true)">
+            Cuenta Dividida
+          </button>
+        </div>
+
+        <!-- VISTA 1: PAGO ÚNICO (Los 4 botones grandes) -->
+        <ng-container *ngIf="!isSplitBill">
+          <div class="grid-2-cols" style="gap: 12px;">
+            <button class="btn btn-secondary" [ngStyle]="{'background-color': selectedPaymentMethod === 1 ? '#3b82f6' : 'transparent', 'color': selectedPaymentMethod === 1 ? '#fff' : 'var(--text-muted)', 'border-color': selectedPaymentMethod === 1 ? '#3b82f6' : 'var(--border-light)'}" (click)="selectedPaymentMethod = 1">💵 Efectivo</button>
+            <button class="btn btn-secondary" [ngStyle]="{'background-color': selectedPaymentMethod === 2 ? '#7c3aed' : 'transparent', 'color': selectedPaymentMethod === 2 ? '#fff' : 'var(--text-muted)', 'border-color': selectedPaymentMethod === 2 ? '#7c3aed' : 'var(--border-light)'}" (click)="selectedPaymentMethod = 2">📱 Yape</button>
+            <button class="btn btn-secondary" [ngStyle]="{'background-color': selectedPaymentMethod === 3 ? '#0ea5e9' : 'transparent', 'color': selectedPaymentMethod === 3 ? '#fff' : 'var(--text-muted)', 'border-color': selectedPaymentMethod === 3 ? '#0ea5e9' : 'var(--border-light)'}" (click)="selectedPaymentMethod = 3">📱 Plin</button>
+            <button class="btn btn-secondary" [ngStyle]="{'background-color': selectedPaymentMethod === 4 ? '#f59e0b' : 'transparent', 'color': selectedPaymentMethod === 4 ? '#fff' : 'var(--text-muted)', 'border-color': selectedPaymentMethod === 4 ? '#f59e0b' : 'var(--border-light)'}" (click)="selectedPaymentMethod = 4">💳 Tarjeta</button>
+          </div>
+        </ng-container>
+
+        <!-- VISTA 2: CUENTAS DIVIDIDAS (Inputs dinámicos) -->
+        <ng-container *ngIf="isSplitBill">
+          <div style="background: var(--bg-dark); padding: 1.5rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-panel);">
+            
+            <div *ngFor="let payment of splitPayments; let i = index" style="display: flex; gap: 10px; margin-bottom: 12px; align-items: center;">
+              <!-- Select de Método -->
+              <select [(ngModel)]="payment.methodId" class="modern-input" style="flex: 1; padding: 10px;">
+                <option [ngValue]="1">💵 Efectivo</option>
+                <option [ngValue]="2">📱 Yape</option>
+                <option [ngValue]="3">📱 Plin</option>
+                <option [ngValue]="4">💳 Tarjeta</option>
+              </select>
+              
+              <!-- Input de Monto -->
+              <div style="position: relative; width: 120px;">
+                <span style="position: absolute; left: 10px; top: 11px; color: var(--text-muted); font-weight: bold;">S/</span>
+                <input type="number" 
+                [(ngModel)]="payment.amount" 
+                class="modern-input" 
+                style="width: 100%; 
+                padding: 10px 10px 10px 30px; 
+                text-align: right;" 
+                min="0"
+                step="0.01"
+                oninput="if(this.value < 0) this.value = Math.abs(this.value)">
+              </div>
+              
+              <!-- Botón de Eliminar Fila -->
+              <button class="btn-icon btn-icon-danger" style="border: none;" (click)="removeSplitPayment(i)" [disabled]="splitPayments.length === 1">✖</button>
+            </div>
+
+            <button class="btn btn-secondary w-100 mt-2" style="border-style: dashed;" (click)="addSplitPayment()">
+              + Agregar método de pago
+            </button>
+            
+            <!-- INDICADOR MATEMÁTICO DE SALDO -->
+            <div style="margin-top: 20px; text-align: center; font-weight: 700; font-size: 1.1rem; padding-top: 15px; border-top: 1px solid var(--border-panel);"
+                 [ngStyle]="{'color': remainingAmount === 0 ? 'var(--green-brand)' : (remainingAmount > 0 ? '#f59e0b' : 'var(--red-brand)')}">
+              <span *ngIf="remainingAmount > 0">Falta cobrar: S/ {{ remainingAmount | number:'1.2-2' }}</span>
+              <span *ngIf="remainingAmount < 0">⚠️ Sobran: S/ {{ absRemainingAmount | number:'1.2-2' }}</span>
+              <span *ngIf="remainingAmount === 0">✅ Cuenta perfectamente cuadrada</span>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <div class="modal-footer">
+        <!-- BOTÓN MAESTRO DE CONFIRMACIÓN -->
+        <button class="btn btn-primary w-100" style="padding: 1rem; font-size: 1.1rem;"
+                 [ngStyle]="{'background-color': canConfirmPayment ? 'var(--green-brand)' : 'var(--bg-input)', 'color': canConfirmPayment ? '#fff' : 'var(--text-muted)'}"
+                 [disabled]="!canConfirmPayment"
+                 (click)="confirmPayment()">
+          {{ canConfirmPayment ? '✅ Confirmar Pago y Liberar' : '🔒 Cuadre los montos primero' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================== -->
+  <!-- MODAL: CONFIRMAR ELIMINACIÓN -->
+  <div class="modal-overlay" *ngIf="showDeleteModal">
+    <div class="modal-content modal-delete">
+      
+      <div class="modal-header">
+        <h3 class="panel-title m-0" style="color: var(--red-brand);">🗑️ Eliminar Mesa</h3>
+        <button class="btn-close" (click)="showDeleteModal = false">✖</button>
+      </div>
+
+      <div class="modal-body">
+        <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1rem;">¿Estás seguro de que deseas eliminar esta mesa?</p>
+        <p class="text-muted m-0" style="font-size: 0.85rem;">Esta acción la removerá de tu mapa.</p>
+      </div>
+      
+      <div class="modal-footer grid-2-cols">
+        <button class="btn btn-secondary w-100" (click)="showDeleteModal = false">Cancelar</button>
+        <button class="btn btn-danger w-100" (click)="executeDelete()">Sí, Eliminar</button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- TOAST NOTIFICATIONS (Alertas Bonitas) -->
+  <div *ngIf="toastMessage" class="toast" [ngClass]="'toast-' + toastType">
+    {{ toastMessage }}
+  </div>
+
+</div>

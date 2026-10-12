@@ -1,0 +1,125 @@
+<div class="modern-dashboard">
+  
+  <header class="dashboard-header">
+    <div class="title-wrapper">
+      <h1 class="main-title m-0">👨‍🍳 Monitor de Cocina (KDS)</h1>
+      <p class="subtitle">Gestiona y actualiza el estado de los pedidos en tiempo real.</p>
+    </div>
+  </header>
+
+  <div class="kds-layout">
+    
+    <!-- ========================================== -->
+    <!-- COLUMNA 1: NUEVOS PEDIDOS (PENDIENTES)     -->
+    <!-- ========================================== -->
+    <div class="kds-column">
+      <div class="column-header orange-header">Nuevos Pedidos</div>
+      
+      <div *ngIf="pendingOrders.length === 0" class="empty-box text-center">
+        <p class="empty-text m-0">No hay pedidos nuevos.</p>
+      </div>
+
+      <div class="kds-card border-orange" *ngFor="let order of pendingOrders">
+        <!-- Cabecera -->
+        <div class="kds-card-header">
+          <div class="badge-mesa">{{ order.tableNumber }}</div>
+          <div class="order-id">#{{ order.orderId.toString().padStart(3, '0') }}</div>
+          <div class="order-time">{{ order.orderTime | date:'shortTime' }}</div>
+        </div>
+        
+        <div class="kds-card-body">
+          <!-- Platos Principales -->
+          <div class="kds-item" *ngFor="let item of order.mainItems">
+            <span class="item-qty">{{ item.quantity }}x</span>
+            <div class="item-details">
+              <span class="item-name">{{ item.dishName }}</span>
+              <span class="item-notes" *ngIf="item.notes">⚠️ {{ item.notes }}</span>
+            </div>
+          </div>
+
+          <!-- Acordeón de Adicionales (Desplegable) -->
+          <div class="adicionales-wrapper" *ngIf="order.adicionalItems.length > 0">
+            <div class="adicionales-toggle" (click)="order.showAdicionales = !order.showAdicionales">
+              <span>➕ Pedido Adicional ({{ order.adicionalItems.length }})</span>
+              <span>{{ order.showAdicionales ? '🔼 Ocultar' : '🔽 Ver' }}</span>
+            </div>
+            
+            <div class="adicionales-content" *ngIf="order.showAdicionales">
+              <div class="kds-item" *ngFor="let item of order.adicionalItems">
+                <span class="item-qty" style="color: var(--red-hover);">{{ item.quantity }}x</span>
+                <div class="item-details">
+                  <span class="item-name">{{ item.dishName }}</span>
+                  <span class="item-notes" *ngIf="item.notes">⚠️ {{ item.notes }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón de Acción Estandarizado -->
+        <div class="kds-card-footer">
+          <button class="btn btn-primary w-100" (click)="changeOrderStatus(order, 'Preparing')" style="padding: 1rem; font-size: 1.05rem;">
+            🔥 Empezar a Cocinar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- COLUMNA 2: EN PREPARACIÓN                  -->
+    <!-- ========================================== -->
+    <div class="kds-column">
+      <div class="column-header blue-header">En Preparación</div>
+      
+      <div *ngIf="preparingOrders.length === 0" class="empty-box text-center">
+        <p class="empty-text m-0">No hay pedidos en preparación.</p>
+      </div>
+
+      <div class="kds-card border-blue" *ngFor="let order of preparingOrders">
+        <!-- Cabecera -->
+        <div class="kds-card-header">
+          <div class="badge-mesa" style="background-color: #3b82f6;">{{ order.tableNumber }}</div>
+          <div class="order-id">#{{ order.orderId.toString().padStart(3, '0') }}</div>
+          <div class="order-time">{{ order.orderTime | date:'shortTime' }}</div>
+        </div>
+        
+        <div class="kds-card-body">
+          <!-- Platos Principales -->
+          <div class="kds-item" *ngFor="let item of order.mainItems">
+            <span class="item-qty" style="color: #3b82f6;">{{ item.quantity }}x</span>
+            <div class="item-details">
+              <span class="item-name">{{ item.dishName }}</span>
+              <span class="item-notes" *ngIf="item.notes">⚠️ {{ item.notes }}</span>
+            </div>
+          </div>
+
+          <!-- Acordeón de Adicionales (Desplegable) -->
+          <div class="adicionales-wrapper" *ngIf="order.adicionalItems.length > 0">
+            <div class="adicionales-toggle" (click)="order.showAdicionales = !order.showAdicionales">
+              <span>➕ Pedido Adicional ({{ order.adicionalItems.length }})</span>
+              <span>{{ order.showAdicionales ? '🔼 Ocultar' : '🔽 Ver' }}</span>
+            </div>
+            
+            <div class="adicionales-content" *ngIf="order.showAdicionales">
+              <div class="kds-item" *ngFor="let item of order.adicionalItems">
+                <span class="item-qty" style="color: var(--red-hover);">{{ item.quantity }}x</span>
+                <div class="item-details">
+                  <span class="item-name">{{ item.dishName }}</span>
+                  <span class="item-notes" *ngIf="item.notes">⚠️ {{ item.notes }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón de Acción Estandarizado (Verde Success) -->
+        <div class="kds-card-footer">
+          <button class="btn w-100" (click)="changeOrderStatus(order, 'Ready')" style="background-color: var(--green-brand); color: white; padding: 1rem; font-size: 1.05rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+            ✅ Marcar como Servido
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

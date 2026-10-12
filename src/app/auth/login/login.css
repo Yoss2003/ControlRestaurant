@@ -1,0 +1,129 @@
+/* =========================================
+   CONTENEDOR PRINCIPAL
+========================================= */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0f172a; /* Fondo oscuro global */
+  /* La fuente ya la hereda de styles.css, pero la dejamos como respaldo */
+  font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   TARJETA DE LOGIN
+========================================= */
+.login-card {
+  background: #1e293b; /* Color de panel oscuro */
+  padding: 2.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-header h1 {
+  font-size: 1.2rem;
+  color: #94a3b8;
+  font-weight: 500;
+  margin: 0;
+}
+
+.login-header h2 {
+  font-size: 2rem;
+  color: #f8fafc;
+  margin: 0.5rem 0;
+  font-weight: 800;
+}
+
+.highlight {
+  color: #f97316; /* Naranja Sonqo */
+}
+
+.login-header p {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+/* =========================================
+   FORMULARIO E INPUTS
+========================================= */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background-color: #0f172a;
+  border: 1px solid #475569;
+  color: #f8fafc;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.form-group input::placeholder {
+  color: #64748b;
+}
+
+/* =========================================
+   BOTONES Y ALERTAS
+========================================= */
+.btn-submit {
+  width: 100%;
+  padding: 0.875rem;
+  background-color: #f97316;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background-color: #ea580c;
+}
+
+.btn-submit:disabled {
+  background-color: #334155;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.error-alert {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
