@@ -70,37 +70,10 @@ export class InventoryComponent implements OnInit {
 
   // CÁLCULO INTELIGENTE: COSTO PROMEDIO PONDERADO
   calculateUnitCost() {
-    if (this.isEditing) {
-      // Si estamos editando, usamos la fórmula del Costo Promedio Ponderado
-      const oldStock = Number(this.originalIngredient.currentStock) || 0;
-      const oldUnitCost = Number(this.originalIngredient.unitCost) || 0;
-      const oldTotalValue = oldStock * oldUnitCost;
-
-      const newStock = Number(this.addedStock) || 0;
-      const newCost = Number(this.addedCost) || 0;
-
-      const finalStock = oldStock + newStock;
-
-      if (finalStock > 0) {
-        this.currentIngredient.currentStock = finalStock;
-        // Nuevo Costo = (Valor Viejo + Valor Nuevo) / Stock Total
-        this.currentIngredient.unitCost = (oldTotalValue + newCost) / finalStock;
-      } else {
-        // Si no agregó nada, se mantiene igual
-        this.currentIngredient.currentStock = oldStock;
-        this.currentIngredient.unitCost = oldUnitCost;
-      }
-
-    } else {
-      // Lógica sencilla para insumo totalmente nuevo
+    if (!this.isEditing) {
       const stock = Number(this.currentIngredient.currentStock) || 0;
       const cost = Number(this.totalCostInput) || 0;
-
-      if (stock > 0 && cost > 0) {
-        this.currentIngredient.unitCost = cost / stock;
-      } else {
-        this.currentIngredient.unitCost = 0;
-      }
+      this.currentIngredient.unitCost = (stock > 0 && cost > 0) ? cost / stock : 0;
     }
   }
 
@@ -216,33 +189,75 @@ export class InventoryComponent implements OnInit {
         fechaSegura = null;
     }
 
-    const payloadParaNET = {
-      name: this.currentIngredient.name,
-      category: this.currentIngredient.category,
-      baseUnit: this.currentIngredient.unitOfMeasure, 
-      initialStock: Number(this.currentIngredient.currentStock) || 0, 
-      initialCost: Number(this.currentIngredient.unitCost) || 0,   
-      minimumStock: Number(this.currentIngredient.minimumStock) || 0,
-      isPerishable: Boolean(this.currentIngredient.isPerishable),
-      expirationDate: fechaSegura
-    };
+    if (this.isEditing) {
+      const payloadUpdate = {
+        name: this.currentIngredient.name,
+        category: this.currentIngredient.category,
+        baseUnit: this.currentIngredient.unitOfMeasure, 
+        minimumStock: Number(this.currentIngredient.minimumStock) || 0,
+        isPerishable: Boolean(this.currentIngredient.isPerishable),
+        expirationDate: fechaSegura
+      };
 
-    const request = this.isEditing 
-      ? this.adminService.updateIngredient(this.currentIngredient.id, payloadParaNET)
-      : this.adminService.createIngredient(payloadParaNET);
+      this.adminService.updateIngredient(this.currentIngredient.id, payloadUpdate).subscribe({
+        next: () => {
+          if (this.addedStock && this.addedStock > 0) {
+            const restockPayload = {
+              ingredientId: this.currentIngredient.id,
+              quantityAdded: Number(this.addedStock),
+              totalCostPaid: Number(this.addedCost) || 0,
+              newExpirationDate: fechaSegura
+            };
+            
+            this.adminService.restockIngredient(restockPayload).subscribe({
+              next: () => {
+                this.successMessage = 'Catálogo y stock actualizados correctamente.';
+                this.isSaving = false;
+                this.finalizeSave();
+              },
+              error: () => {
+                this.showError('Catálogo actualizado, pero falló la suma del stock.');
+                this.isSaving = false;
+              }
+            });
+          } else {
+            this.successMessage = 'Elemento actualizado correctamente.';
+            this.isSaving = false;
+            this.finalizeSave();
+          }
+        },
+        error: (err) => {
+          console.error("Error del backend:", err);
+          this.showError('Error al actualizar el catálogo.');
+          this.isSaving = false;
+        }
+      });
 
-    request.subscribe({
-      next: () => {
-        this.successMessage = this.isEditing ? 'Elemento actualizado correctamente.' : 'Elemento registrado correctamente.';
-        this.isSaving = false; 
-        this.finalizeSave();
-      },
-      error: (err) => {
-        console.error("Error del backend:", err);
-        this.showError('Error al procesar la solicitud.');
-        this.isSaving = false; 
-      }
-    });
+    } else {
+      const payloadCreate = {
+        name: this.currentIngredient.name,
+        category: this.currentIngredient.category,
+        baseUnit: this.currentIngredient.unitOfMeasure, 
+        initialStock: Number(this.currentIngredient.currentStock) || 0, 
+        initialCost: Number(this.currentIngredient.unitCost) || 0,   
+        minimumStock: Number(this.currentIngredient.minimumStock) || 0,
+        isPerishable: Boolean(this.currentIngredient.isPerishable),
+        expirationDate: fechaSegura
+      };
+
+      this.adminService.createIngredient(payloadCreate).subscribe({
+        next: () => {
+          this.successMessage = 'Elemento registrado correctamente.';
+          this.isSaving = false; 
+          this.finalizeSave();
+        },
+        error: (err) => {
+          console.error("Error del backend:", err);
+          this.showError('Error al procesar la solicitud.');
+          this.isSaving = false; 
+        }
+      });
+    }
   }
 
   private finalizeSave() {

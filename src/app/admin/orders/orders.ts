@@ -13,6 +13,8 @@ import { Signalr } from '../../services/signalr';
   styleUrls: ['./orders.css']
 })
 export class OrdersComponent implements OnInit, OnDestroy {
+  isSubmittingOrder = false;
+  isProcessingPayment = false;
   tables: any[] = [];
   isLoading = true;
 
@@ -290,13 +292,27 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.splitPayments = [];
   }
 
+  get canConfirmPayment(): boolean {
+    if (!this.isSplitBill) return true;
+    if (this.splitPayments.length === 0) return false;
+    
+    const allAmountsValid = this.splitPayments.every(
+      p => typeof p.amount === 'number' && Number.isFinite(p.amount) && p.amount > 0
+    );
+    
+    // Permitimos una tolerancia técnica de 0.01 centavo para redondear en pantalla
+    return allAmountsValid && Math.abs(this.remainingAmount) <= 0.01;
+  }
+
   confirmPayment() {
-    if (!this.selectedTable || !this.activeOrderDetails?.orderId) return;
-if (!this.canConfirmPayment) return;
+    if (!this.selectedTable || !this.activeOrderDetails?.orderId) return; 
+    if (!this.canConfirmPayment) return;
+    
+    // RC10: Bloqueo de reentrada para evitar cobrar dos veces
+    if (this.isProcessingPayment) return;
+    this.isProcessingPayment = true;
 
     let paymentData: any = {};
-
-    // Construimos el DTO según cómo haya cobrado
     if (this.isSplitBill) {
       paymentData = {
         primaryPaymentMethodId: 0,
@@ -314,15 +330,18 @@ if (!this.canConfirmPayment) return;
       };
     }
 
-    this.adminService.payOrder(this.activeOrderDetails.orderId, paymentData).subscribe({      next: () => {
-        this.showToast('✅ Pago registrado y mesa liberada', 'success'); 
+    this.adminService.payOrder(this.activeOrderDetails.orderId, paymentData).subscribe({
+      next: () => {
+        this.showToast('💸 Pago registrado y mesa liberada', 'success'); 
         this.showCheckoutModal = false;
         this.closeModals();
-        this.loadTables(); 
+        this.loadTables();
+        this.isProcessingPayment = false; // Liberamos
       },
       error: (err: any) => {
         console.error(err);
         this.showToast('❌ Error al procesar el pago', 'error');
+        this.isProcessingPayment = false; // Liberamos
       }
     });
   }
@@ -393,6 +412,9 @@ if (!this.canConfirmPayment) return;
       this.showToast('El pedido está vacío. Agrega platos primero.', 'error');
       return;
     }
+    // RC10: Bloqueo de reentrada
+    if (this.isSubmittingOrder) return;
+    this.isSubmittingOrder = true;
 
     const payload = {
       tableId: this.selectedTable.id,
@@ -405,12 +427,14 @@ if (!this.canConfirmPayment) return;
 
     this.adminService.createOrder(payload).subscribe({
       next: () => {
-        this.showToast('¡Pedido enviado a cocina!', 'success');
+        this.showToast('✅ ¡Pedido enviado a cocina!', 'success');
         this.closeModals();
-        this.loadTables(); // Recarga la mesa para que ahora aparezca OCUPADA (Roja)
+        this.loadTables(); 
+        this.isSubmittingOrder = false; // Liberamos el botón
       },
       error: (err) => {
         this.showToast('Error al enviar el pedido: ' + (err.error || err.message), 'error');
+        this.isSubmittingOrder = false; // Liberamos el botón si hay error
       }
     });
   }
@@ -479,7 +503,7 @@ if (!this.canConfirmPayment) return;
     return Math.abs(this.remainingAmount);
   }
 
-  get canConfirmPayment(): boolean {
+  get OrdersComponentcanConfirmPayment(): boolean {
   if (!this.isSplitBill) return true;
   if (this.splitPayments.length === 0) return false;
 

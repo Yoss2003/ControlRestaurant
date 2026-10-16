@@ -227,7 +227,8 @@ export class DishesManagementComponent implements OnInit {
     if ((rUnit === 'g' && iUnit === 'kg') || (rUnit === 'ml' && iUnit === 'l')) return quantity / 1000;
     if ((rUnit === 'kg' && iUnit === 'g') || (rUnit === 'l' && iUnit === 'ml')) return quantity * 1000;
 
-    return quantity;
+    console.warn(`Conversión rechazada: Incompatible de ${rUnit} a ${iUnit}`);
+    return 0;
   }
 
   // --- GESTIÓN DE PLATOS ---

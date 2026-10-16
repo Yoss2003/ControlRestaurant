@@ -2,6 +2,7 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { Signalr } from '../../services/signalr';
 
 @Component({
   selector: 'app-main-layout',
@@ -16,7 +17,8 @@ export class MainLayout implements OnInit {
 
   constructor(
     public authService: AuthService, 
-    private router: Router
+    private router: Router,
+    private signalr: Signalr
   ) {}
 
   ngOnInit() {
@@ -54,6 +56,7 @@ export class MainLayout implements OnInit {
       localStorage.removeItem('token');
       localStorage.removeItem('userRole');
     }
+    this.signalr.stopConnection();
     this.router.navigate(['/login']);
   }
 }

@@ -8,10 +8,6 @@
 /.angular
 /out-tsc
 
-# Entornos y configuraciones locales
-/src/environments/environment.development.ts
-/src/environments/environment.ts
-
 # Logs y archivos del sistema operativo
 npm-debug.log*
 yarn-debug.log*
