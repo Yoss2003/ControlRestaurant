@@ -1,10 +1,10 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, CanActivateChildFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-export const AuthGuard: CanActivateFn = (route, state) => {
+export const AuthGuard: CanActivateFn | CanActivateChildFn = (route, state) => {
   if (typeof window === 'undefined') {
-    return true; 
+    return true;
   }
 
   const authService = inject(AuthService);
@@ -14,14 +14,13 @@ export const AuthGuard: CanActivateFn = (route, state) => {
     return router.parseUrl('/login');
   }
 
-  const expectedRoles = route.data['expectedRoles'] as Array<string>;
-  
+  const expectedRoles = route.data?.['expectedRoles'] as Array<string>;
   if (expectedRoles) {
     const userRole = authService.getUserRole();
-    
+
     if (!expectedRoles.includes(userRole)) {
       console.warn(`Acceso denegado: Rol insuficiente (${userRole})`);
-      
+
       if (userRole === 'Kitchen') {
         return router.parseUrl('/cocina');
       } else if (userRole === 'Waiter') {
@@ -32,5 +31,5 @@ export const AuthGuard: CanActivateFn = (route, state) => {
     }
   }
 
-  return true; 
+  return true;
 };

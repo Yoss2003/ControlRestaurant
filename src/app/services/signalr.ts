@@ -1,3 +1,4 @@
+// app/services/signalr.ts
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { Subject } from 'rxjs';
@@ -20,10 +21,16 @@ export class Signalr {
       return;
     }
 
-    const token = this.authService.getToken()?.replace(/['"]+/g, '') || '';    
+    if (this.hubConnection && this.hubConnection.state === signalR.HubConnectionState.Connected) {
+      return;
+    }
+
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(environment.hubUrl, {
-          accessTokenFactory: () => token
+        // CORRECCIÓN RC06/RC07: Función dinámica que evalúa el token en cada intento de conexión/reconexión
+        accessTokenFactory: () => {
+          return this.authService.getToken()?.replace(/['"]+/g, '') || '';
+        }
       })
       .withAutomaticReconnect()
       .build();
@@ -34,8 +41,14 @@ export class Signalr {
       .catch(err => console.error('🔴 Error conectando a SignalR: ', err));
 
     this.hubConnection.on('ReceiveOrderUpdate', (message: string) => {
-      console.log('🔔 Actualización en tiempo real recibida:', message);
+      console.log('🔄 Actualización en tiempo real recibida:', message);
       this.orderUpdateSubject.next(message);
     });
+  }
+
+  public stopConnection = () => {
+    if (this.hubConnection) {
+      this.hubConnection.stop();
+    }
   }
 }

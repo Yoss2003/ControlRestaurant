@@ -291,8 +291,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   confirmPayment() {
-    if (!this.selectedTable || !this.activeOrderDetails) return;
-    if (!this.canConfirmPayment) return; // Validación extra de seguridad
+    if (!this.selectedTable || !this.activeOrderDetails?.orderId) return;
+if (!this.canConfirmPayment) return;
 
     let paymentData: any = {};
 
@@ -314,8 +314,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
       };
     }
 
-    this.adminService.payOrder(this.selectedTable.id, paymentData).subscribe({
-      next: () => {
+    this.adminService.payOrder(this.activeOrderDetails.orderId, paymentData).subscribe({      next: () => {
         this.showToast('✅ Pago registrado y mesa liberada', 'success'); 
         this.showCheckoutModal = false;
         this.closeModals();
@@ -481,11 +480,14 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   get canConfirmPayment(): boolean {
-    if (!this.isSplitBill) return true; // Si es pago único, siempre cuadra
-    
-    // Si es pago dividido, el restante debe ser exactamente 0 (tolerancia para decimales)
-    return Math.abs(this.remainingAmount) < 0.01;
-  }
+  if (!this.isSplitBill) return true;
+  if (this.splitPayments.length === 0) return false;
+
+  const allAmountsValid = this.splitPayments.every(
+    p => typeof p.amount === 'number' && Number.isFinite(p.amount) && p.amount > 0
+  );
+  return allAmountsValid && Math.abs(this.remainingAmount) < 0.01;
+}
 
   setSplitBillMode(isSplit: boolean) {
     this.isSplitBill = isSplit;

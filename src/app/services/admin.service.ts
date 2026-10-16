@@ -99,8 +99,8 @@ export class AdminService {
     return this.http.get(`${this.ordersUrl}/table/${tableId}/active`);
   }
 
-  payOrder(tableId: number, paymentData: any): Observable<any> {
-    return this.http.post(`${this.ordersUrl}/table/${tableId}/pay`, paymentData);
+  payOrder(orderId: number, paymentData: any): Observable<any> {
+    return this.http.post(`${this.ordersUrl}/${orderId}/pay`, paymentData);
   }
 
   getDashboardMetrics(): Observable<any> {

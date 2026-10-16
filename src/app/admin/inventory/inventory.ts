@@ -50,10 +50,7 @@ export class InventoryComponent implements OnInit {
   loadIngredients() {
     this.adminService.getIngredients().subscribe({
       next: (data) => {
-        this.ingredients = (data || []).sort((a: any, b: any) => {
-          const id = a.id;
-          return id;
-        });
+        this.ingredients = (data || []).sort((a: any, b: any) => Number(a.id) - Number(b.id));
         this.filterData(); 
         this.calculateCapital(); 
         this.cdr.detectChanges(); 

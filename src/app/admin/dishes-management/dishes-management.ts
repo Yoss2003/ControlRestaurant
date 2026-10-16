@@ -120,31 +120,31 @@ export class DishesManagementComponent implements OnInit {
   }
 
   calculateAnalysis(source: string = 'ingredients') {
-    this.liveRecipeCost = 0;
-    
+    let totalRecipeCost = 0;
+    const portions = Math.max(1, Number(this.recipePayload.yieldPortions) || 1);
+
     for (let item of this.recipePayload.items) {
       if (item.ingredientId && item.totalQuantity) {
         let ing = this.availableIngredients.find(x => x.id === item.ingredientId);
         if (ing) {
           let convertedQty = this.convertQuantity(item.totalQuantity, item.unit, ing.unitOfMeasure);
-          let cost = ing.unitCost || ing.initialCost || 0; 
-          this.liveRecipeCost += convertedQty * cost; // Costo exacto por 1 plato
+          let cost = ing.unitCost || ing.initialCost || 0;
+          totalRecipeCost += convertedQty * cost;
         }
       }
     }
 
+    // RC16: Dividimos el costo total de la receta entre las porciones que rinde
+    this.liveRecipeCost = totalRecipeCost / portions;
     this.suggestedPrice = this.liveRecipeCost > 0 ? this.liveRecipeCost / 0.33 : 0;
 
-    if (source === 'ingredients') {
+    if (source === 'ingredients' && this.isCreatingDish && !this.newDish.price) {
       if (this.suggestedPrice > 0) {
         this.newDish.price = Number(this.suggestedPrice.toFixed(2));
-      } else {
-        this.newDish.price = null; 
       }
     }
 
     let sellPrice = this.newDish.price || 0;
-    
     if (sellPrice > 0 && this.liveRecipeCost > 0) {
       this.currentMargin = ((sellPrice - this.liveRecipeCost) / sellPrice) * 100;
     } else {
@@ -156,13 +156,13 @@ export class DishesManagementComponent implements OnInit {
       this.marginColor = '#64748b';
     } else if (this.currentMargin >= 65) {
       this.marginStatus = 'Excelente Ganancia';
-      this.marginColor = '#10b981'; 
+      this.marginColor = '#10b981';
     } else if (this.currentMargin >= 45) {
       this.marginStatus = 'Margen Aceptable';
-      this.marginColor = '#f59e0b'; 
+      this.marginColor = '#f59e0b';
     } else {
       this.marginStatus = 'Peligro (Pérdida/Bajo)';
-      this.marginColor = '#ef4444'; 
+      this.marginColor = '#ef4444';
     }
   }
 
@@ -220,12 +220,13 @@ export class DishesManagementComponent implements OnInit {
 
   private convertQuantity(quantity: number, recipeUnit: string, inventoryUnit: string): number {
     if (!quantity || !recipeUnit || !inventoryUnit) return quantity || 0;
-    let rUnit = recipeUnit.toLowerCase();
-    let iUnit = inventoryUnit.toLowerCase();
-    
+    let rUnit = recipeUnit.trim().toLowerCase();
+    let iUnit = inventoryUnit.trim().toLowerCase();
+
     if (rUnit === iUnit) return quantity;
-    if ((rUnit === 'g' && iUnit === 'kg') || (rUnit === 'ml' && iUnit === 'L')) return quantity / 1000;
-    if ((rUnit === 'kg' && iUnit === 'g') || (rUnit === 'L' && iUnit === 'ml')) return quantity * 1000;
+    if ((rUnit === 'g' && iUnit === 'kg') || (rUnit === 'ml' && iUnit === 'l')) return quantity / 1000;
+    if ((rUnit === 'kg' && iUnit === 'g') || (rUnit === 'l' && iUnit === 'ml')) return quantity * 1000;
+
     return quantity;
   }
 
