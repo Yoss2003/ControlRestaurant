@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../services/admin.service';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-dashboard',
@@ -9,16 +10,20 @@ import { AdminService } from '../../services/admin.service';
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
-export class Dashboard implements OnInit {
+export class DashboardComponent implements OnInit {
   metrics: any = null;
   isLoading: boolean = true;
   errorMessage: string = '';
 
   // INYECTAMOS ChangeDetectorRef
-  constructor(private adminService: AdminService, private cdr: ChangeDetectorRef) {}
+  constructor(private adminService: AdminService, private cdr: ChangeDetectorRef, @Inject(PLATFORM_ID) private platformId: Object) {}
 
   ngOnInit(): void {
-    this.loadMetrics();
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadMetrics();
+    } else {
+      this.isLoading = false; 
+    }
   }
 
   loadMetrics() {

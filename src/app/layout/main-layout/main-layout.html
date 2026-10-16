@@ -60,9 +60,14 @@
       </nav>
       
       <div class="sidebar-bottom">
-        <a *ngIf="['Admin', 'SuperAdmin'].includes(authService.getUserRole())" href="#" class="nav-item" (click)="closeSidebarOnMobile()">
+        <a *ngIf="['Admin', 'SuperAdmin'].includes(authService.getUserRole())" routerLink="/ajustes" routerLinkActive="active" class="nav-item" (click)="closeSidebarOnMobile()">
           <span class="icon">⚙️</span>
           <span class="nav-text">Ajustes</span>
+        </a>
+
+        <a *ngIf="['Admin', 'SuperAdmin'].includes(authService.getUserRole())" routerLink="/caja" routerLinkActive="active" class="nav-item" (click)="closeSidebarOnMobile()">
+          <span class="icon">💰</span>
+          <span class="nav-text">Caja Chica</span>
         </a>
         
         <a href="javascript:void(0)" class="nav-item logout" (click)="logout()">

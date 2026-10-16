@@ -12,6 +12,9 @@ export class AdminService {
   private dishesUrl = `${environment.apiUrl}/Dishes`;
   private inventoryUrl = `${environment.apiUrl}/Inventory`;
   private tablesUrl = `${environment.apiUrl}/Tables`;
+  private cashUrl = `${environment.apiUrl}/CashRegister`;
+  private usersUrl = `${environment.apiUrl}/Users`;
+  private configUrl = `${environment.apiUrl}/Settings`;
 
   constructor(private http: HttpClient) { }
 
@@ -102,5 +105,43 @@ export class AdminService {
 
   getDashboardMetrics(): Observable<any> {
     return this.http.get(`${this.ordersUrl}/dashboard`);
+  }
+
+  // ---- GESTIÓN DE CAJA CHICA ----
+  getCurrentCashRegister(): Observable<any> {
+    return this.http.get(`${this.cashUrl}/current`);
+  }
+
+  openCashRegister(payload: any): Observable<any> {
+    return this.http.post(`${this.cashUrl}/open`, payload);
+  }
+
+  closeCashRegister(payload: any): Observable<any> {
+    return this.http.post(`${this.cashUrl}/close`, payload);
+  }
+
+  // ---- GESTIÓN DE USUARIOS Y CONFIGURACIÓN ----
+  createNewRestaurant(data: any): Observable<any> {
+    return this.http.post(`${this.configUrl}/new-restaurant`, data);
+  }
+  getUsers(): Observable<any[]> {
+    return this.http.get<any[]>(this.usersUrl);
+  }
+  createUser(userData: any): Observable<any> {
+    return this.http.post(this.usersUrl, userData);
+  }
+  updateUser(id: number, userData: any): Observable<any> {
+    return this.http.put(`${this.usersUrl}/${id}`, userData);
+  }
+  deleteUser(id: number): Observable<any> {
+    return this.http.delete(`${this.usersUrl}/${id}`);
+  }
+
+  //---- GESTIÓN DE CONFIGURACIÓN DEL RESTAURANTE ----
+  getSettings(): Observable<any> {
+    return this.http.get(this.configUrl);
+  }
+  saveSettings(data: any): Observable<any> {
+    return this.http.post(this.configUrl, data);
   }
 }

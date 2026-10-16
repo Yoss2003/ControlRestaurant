@@ -130,9 +130,9 @@ body {
 .modern-input:-webkit-autofill:hover, 
 .modern-input:-webkit-autofill:focus, 
 .modern-input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px var(--bg-dark) inset !important;
-    -webkit-text-fill-color: var(--text-main) !important;
-    transition: background-color 5000s ease-in-out 0s;
+  -webkit-text-fill-color: var(--text-main) !important;
+  -webkit-box-shadow: 0 0 0px 1000px #0f172a inset !important;    
+  transition: background-color 5000s ease-in-out 0s !important;
 }
 
 .highlight-input { 

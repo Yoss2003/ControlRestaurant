@@ -1,18 +1,27 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Inventory } from './inventory';
+import { InventoryComponent } from './inventory';
+import { AdminService } from '../../services/admin.service';
+import { of } from 'rxjs';
 
-describe('Inventory', () => {
-  let component: Inventory;
-  let fixture: ComponentFixture<Inventory>;
+describe('InventoryComponent', () => {
+  let component: InventoryComponent;
+  let fixture: ComponentFixture<InventoryComponent>;
+
+  const mockAdminService = {
+    getIngredients: () => of([])
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Inventory],
+      imports: [InventoryComponent],
+      providers: [
+        { provide: AdminService, useValue: mockAdminService }
+      ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Inventory);
+    fixture = TestBed.createComponent(InventoryComponent);
     component = fixture.componentInstance;
-    await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {

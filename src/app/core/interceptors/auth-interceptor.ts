@@ -4,19 +4,17 @@ import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
-export const authInterceptor: HttpInterceptorFn = (req, next) => {
+export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   if (typeof window === 'undefined') {
     return next(req);
   }
-
-  // NUEVO: Ignorar el manifest y archivos estáticos para que no bloquee el inicio
+  
   if (req.url.includes('manifest.json') || req.url.includes('assets/')) {
     return next(req);
   }
 
   const authService = inject(AuthService);
   const token = authService.getToken();
-
   let clonedReq = req;
 
   if (token) {
@@ -29,10 +27,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
+      
+      if (error.status === 401 && !req.url.includes('/login')) {
         console.warn('Sesión expirada. Redirigiendo al login...');
         authService.logout();
       }
+      
       return throwError(() => error);
     })
   );

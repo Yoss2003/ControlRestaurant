@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service'; // Importamos tu nuevo servicio
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -16,26 +16,27 @@ export class LoginComponent {
     username: '',
     password: ''
   };
-  
   errorMessage: string = '';
   isLoading: boolean = false;
 
-  // Inyectamos el AuthService en lugar de HttpClient
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService, 
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private cdr: ChangeDetectorRef // <-- INYECTAMOS EL DETECTOR DE CAMBIOS
+  ) {}
 
   onSubmit() {
     this.isLoading = true;
     this.errorMessage = '';
+    this.cdr.detectChanges(); // Forzamos a la pantalla a mostrar "Verificando..."
 
-    // Delegamos la llamada al servicio que creamos
     this.authService.login(this.credentials).subscribe({
       next: () => {
         this.isLoading = false;
         
-        // Obtenemos el rol del usuario que acaba de ingresar
         const role = this.authService.getUserRole();
         
-        // Lógica inteligente de redirección según el rol
         if (role === 'Admin' || role === 'SuperAdmin') {
           this.router.navigate(['/dashboard']);
         } else if (role === 'Kitchen') {
@@ -43,17 +44,27 @@ export class LoginComponent {
         } else if (role === 'Waiter') {
           this.router.navigate(['/pedidos']);
         } else {
-          // Fallback por defecto si no reconocemos el rol
           this.router.navigate(['/pedidos']);
         }
       },
       error: (err) => {
+        console.error("Error capturado en el Login:", err); // Para que lo veas en F12
+        
+        // RE-HABILITAMOS EL BOTÓN
         this.isLoading = false;
-        if (err.status === 401 || err.status === 404) {
+
+        // EVALUAMOS TODOS LOS POSIBLES ERRORES (401, 404, 400 y 0)
+        if (err.status === 0) {
+          this.errorMessage = 'No hay conexión. Verifica que la API (C#) esté encendida.';
+        } else if (err.status === 401 || err.status === 404 || err.status === 400) {
           this.errorMessage = 'Usuario o contraseña incorrectos.';
         } else {
-          this.errorMessage = 'Error al conectar con el servidor. Verifica que la API esté corriendo.';
+          this.errorMessage = 'Error del servidor. Inténtalo de nuevo más tarde.';
         }
+
+        // ¡EL TOQUE MÁGICO! 
+        // Obligamos a Angular a repintar la pantalla AHORA MISMO
+        this.cdr.detectChanges(); 
       }
     });
   }

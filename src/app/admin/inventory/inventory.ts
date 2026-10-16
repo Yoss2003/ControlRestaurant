@@ -1,5 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
 
@@ -23,9 +23,9 @@ export class InventoryComponent implements OnInit {
   currentIngredient: any = this.getEmptyIngredient();
 
   // VARIABLES PARA LA LÓGICA DE REPONER STOCK
-  originalIngredient: any = null; // Guarda el estado original sin modificar
-  addedStock: number | null = null; // Lo nuevo que se compró
-  addedCost: number | null = null;  // Lo que costó lo nuevo
+  originalIngredient: any = null;
+  addedStock: number | null = null;
+  addedCost: number | null = null;
 
   showDeleteModal = false;
   itemToDelete: any = null;
@@ -35,10 +35,16 @@ export class InventoryComponent implements OnInit {
 
   totalCostInput: number | null = null;
 
-  constructor(private adminService: AdminService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private adminService: AdminService, 
+    private cdr: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   ngOnInit() {
-    this.loadIngredients();
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadIngredients();
+    }
   }
 
   loadIngredients() {

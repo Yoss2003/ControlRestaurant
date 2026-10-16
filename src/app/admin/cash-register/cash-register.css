@@ -1,0 +1,28 @@
+/* Usamos el layout global stats-section de tu proyecto para las tarjetas superiores */
+.stats-section {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+  min-width: 250px;
+  padding: 1.5rem 2rem;
+  border-left: 4px solid var(--border-color);
+  box-shadow: var(--shadow-panel);
+}
+
+.stat-icon-wrapper {
+  width: 55px; height: 55px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+}
+.stat-emoji { font-size: 1.8rem; }
+.stat-info { display: flex; flex-direction: column; gap: 0.3rem; }
+.stat-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+.stat-value { font-size: 1.6rem; }

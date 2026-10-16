@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../core/services/auth.service';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
@@ -12,11 +13,14 @@ export class Signalr {
   private orderUpdateSubject = new Subject<string>();
   public orderUpdates$ = this.orderUpdateSubject.asObservable();
 
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService, @Inject(PLATFORM_ID) private platformId: Object) { }
 
   public startConnection = () => {
-    const token = this.authService.getToken()?.replace(/['"]+/g, '') || '';
-    
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    const token = this.authService.getToken()?.replace(/['"]+/g, '') || '';    
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(environment.hubUrl, {
           accessTokenFactory: () => token

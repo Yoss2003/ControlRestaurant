@@ -1,0 +1,98 @@
+<div class="modern-dashboard">
+  <!-- ENCABEZADO -->
+  <header class="dashboard-header">
+    <div class="title-wrapper">
+      <h1 class="main-title">Control de <span class="text-orange">Caja Chica</span></h1>
+      <p class="subtitle">Abre tu turno para procesar cobros y ciérralo para cuadrar el efectivo.</p>
+    </div>
+  </header>
+
+  <div *ngIf="isLoading" class="text-center text-muted" style="padding: 2rem;">
+    Verificando estado de la caja...
+  </div>
+
+  <div *ngIf="!isLoading">
+    <!-- VISTA 1: CAJA CERRADA -->
+    <main class="modern-panel" *ngIf="!isOpen" style="max-width: 600px; margin: 0 auto; text-align: center;">
+      <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.8;">🔒</div>
+      <h2 style="color: var(--red-brand); margin-bottom: 0.5rem;">Caja Cerrada</h2>
+      <p class="text-muted mb-4">El sistema de cobros está bloqueado. Registra el fondo inicial para abrir la caja y empezar a cobrar mesas.</p>
+      
+      <div style="text-align: left; background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
+        <label class="modern-label">Efectivo en caja (Monto de Apertura)</label>
+        <div style="position: relative; margin-bottom: 1.5rem;">
+          <span style="position: absolute; left: 15px; top: 12px; color: var(--text-muted); font-weight: bold;">S/</span>
+          <input type="number" 
+                 [(ngModel)]="openingBalance" 
+                 class="modern-input w-100 highlight-input" 
+                 style="padding-left: 40px; font-size: 1.2rem; font-weight: bold;"
+                 placeholder="0.00" min="0">
+        </div>
+        
+        <button class="btn btn-primary w-100" style="padding: 1rem; font-size: 1.1rem;" (click)="onOpenRegister()">
+          Abrir Turno de Caja
+        </button>
+      </div>
+    </main>
+
+    <!-- VISTA 2: CAJA ABIERTA -->
+    <div *ngIf="isOpen">
+      <!-- Tarjetas de Resumen (Estilo Inventario/Dashboard) -->
+      <div class="stats-section">
+        <div class="stat-card modern-panel" style="border-left-color: var(--green-brand);">
+          <div class="stat-icon-wrapper" style="background-color: rgba(16, 185, 129, 0.1);"><span class="stat-emoji">🔓</span></div>
+          <div class="stat-info">
+            <span class="stat-label text-muted font-bold text-green">Estado Actual</span>
+            <span class="stat-value font-bold">ABIERTA</span>
+          </div>
+        </div>
+
+        <div class="stat-card modern-panel" style="border-left-color: var(--orange-brand);">
+          <div class="stat-icon-wrapper" style="background-color: rgba(249, 115, 22, 0.1);"><span class="stat-emoji">💰</span></div>
+          <div class="stat-info">
+            <span class="stat-label text-muted font-bold">Fondo Inicial Registrado</span>
+            <span class="stat-value text-orange font-bold">S/ {{ registerData?.openingBalance | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel de Cierre -->
+      <main class="modern-panel" style="max-width: 700px;">
+        <h3 class="panel-title mb-1">Cerrar Turno</h3>
+        <p class="text-muted mb-4" style="font-size: 0.9rem;">
+          Abierta desde: <strong style="color: #fff;">{{ registerData?.openedAt | date:'shortTime' }}</strong>. 
+          Cuente el dinero físico real que tiene en la caja para detectar si hay sobrantes o faltantes.
+        </p>
+
+        <div class="grid-2-cols mb-3">
+          <div>
+            <label class="modern-label">Efectivo Físico Contado</label>
+            <div style="position: relative;">
+              <span style="position: absolute; left: 15px; top: 12px; color: var(--text-muted); font-weight: bold;">S/</span>
+              <input type="number" 
+                     [(ngModel)]="actualBalance" 
+                     class="modern-input w-100 highlight-input" 
+                     style="padding-left: 40px; font-size: 1.1rem; font-weight: bold;"
+                     placeholder="0.00" min="0">
+            </div>
+          </div>
+          <div>
+            <label class="modern-label">Observaciones (Opcional)</label>
+            <textarea [(ngModel)]="notes" class="modern-input w-100" rows="1" placeholder="Ej: Se usó 10 soles para taxi..."></textarea>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem; margin-top: 1rem;">
+          <button class="btn btn-danger w-100" style="padding: 1rem; font-size: 1.1rem;" (click)="onCloseRegister()">
+            Cerrar Caja
+          </button>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- TOASTS -->
+  <div *ngIf="toastMessage" class="toast" [ngClass]="'toast-' + toastType">
+    {{ toastMessage }}
+  </div>
+</div>

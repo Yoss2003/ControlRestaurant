@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Signalr } from '../../services/signalr';
 import { forkJoin, Subscription } from 'rxjs';
 import { AdminService } from '../../services/admin.service';
@@ -17,14 +17,21 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
   refreshInterval: any;
   private signalRSubscription!: Subscription;
 
-  constructor(private adminService: AdminService, private cdr: ChangeDetectorRef, private signalrService: Signalr) {}
+  constructor(
+    private adminService: AdminService, 
+    private cdr: ChangeDetectorRef, 
+    private signalrService: Signalr,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   ngOnInit() {
-    this.loadOrders();
-    this.signalrService.startConnection();
-    this.signalRSubscription = this.signalrService.orderUpdates$.subscribe((mensaje) => {
-    this.loadOrders();
-    });
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadOrders();
+      this.signalrService.startConnection();
+      this.signalRSubscription = this.signalrService.orderUpdates$.subscribe((mensaje) => {
+        this.loadOrders();
+      });
+    }
   }
 
   ngOnDestroy() {

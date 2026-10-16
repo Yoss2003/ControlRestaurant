@@ -1,6 +1,6 @@
-import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { forkJoin, Subscription } from 'rxjs';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
 import { Signalr } from '../../services/signalr';
@@ -12,7 +12,7 @@ import { Signalr } from '../../services/signalr';
   templateUrl: './orders.html',
   styleUrls: ['./orders.css']
 })
-export class Orders implements OnInit, OnDestroy {
+export class OrdersComponent implements OnInit, OnDestroy {
   tables: any[] = [];
   isLoading = true;
 
@@ -59,31 +59,36 @@ export class Orders implements OnInit, OnDestroy {
   constructor(
     private adminService: AdminService,
     private cdr: ChangeDetectorRef,
-    private signalrService: Signalr
+    private signalrService: Signalr,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
-    this.loadTables();
-    this.loadDishes();
-    this.signalrService.startConnection();
-    this.signalrSubscription = this.signalrService.orderUpdates$.subscribe((mensaje) => {
-      if(mensaje === 'STATUS_UPDATE'){
-        this.showToast('Estado de la orden actualizado.', 'success');
-      }
+    if (isPlatformBrowser(this.platformId)) {
       this.loadTables();
-
-      if(this.showOrderDetailsModal && this.selectedTable){
-        this.adminService.getActiveOrder(this.selectedTable.id).subscribe({
-          next: (data) => {
-            this.activeOrderDetails = data;
-            this.cdr.detectChanges();
-          },
-          error: () => {
-            this.showToast('No se pudo actualizar la cuenta de esta mesa.', 'error');
-          }
-        });
-      }
-    });
+      this.loadDishes();
+      this.signalrService.startConnection();
+      
+      this.signalrSubscription = this.signalrService.orderUpdates$.subscribe((mensaje) => {
+        if(mensaje === 'STATUS_UPDATE'){
+          this.showToast('Estado de la orden actualizado.', 'success');
+        }
+        this.loadTables();
+        if(this.showOrderDetailsModal && this.selectedTable){
+          this.adminService.getActiveOrder(this.selectedTable.id).subscribe({
+            next: (data) => {
+              this.activeOrderDetails = data;
+              this.cdr.detectChanges();
+            },
+            error: () => {
+              this.showToast('No se pudo actualizar la cuenta de esta mesa.', 'error');
+            }
+          });
+        }
+      });
+    } else {
+      this.isLoading = false;
+    }
   }
 
   ngOnDestroy(): void {

@@ -1,0 +1,94 @@
+/* =========================================
+   LAYOUT: BARRA DE HERRAMIENTAS Y TABS
+========================================= */
+.panel-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.tabs-container {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.8rem 1.2rem;
+  cursor: pointer;
+  position: relative;
+  bottom: -2px;
+}
+
+.tab-btn.active {
+  color: var(--orange-brand);
+  border-bottom: 2px solid var(--orange-brand);
+}
+
+/* =========================================
+   LAYOUT: GRILLA DE USUARIOS (TABLA)
+========================================= */
+.inventory-grid-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.inventory-header, .inventory-row {
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem 1.5rem;
+  min-width: 500px;
+  align-items: center;
+}
+
+.inventory-header {
+  background-color: rgba(255,255,255,0.02);
+  border-radius: 10px;
+  margin-bottom: 0.8rem;
+  border-bottom: none;
+}
+
+.inventory-row {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.inventory-row:last-child {
+  border-bottom: none;
+}
+
+.inventory-row:hover {
+  background-color: rgba(255,255,255,0.03);
+  border-radius: 10px;
+}
+
+.col-header { 
+  font-size: 0.75rem; 
+  text-transform: uppercase; 
+  letter-spacing: 1px; 
+}
+
+.cell-name { 
+  font-size: 1rem; 
+}
+
+.cell-actions { 
+  display: flex; 
+  gap: 0.5rem; 
+  justify-content: center; 
+}
+
+/* =========================================
+   BADGES (Etiquetas de Rol)
+========================================= */
+.badge {
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+}

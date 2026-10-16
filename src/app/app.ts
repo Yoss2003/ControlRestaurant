@@ -29,16 +29,19 @@ export class App implements OnInit {
   @HostListener('window:mousemove')
   @HostListener('window:keydown')
   @HostListener('window:click')
-  @HostListener('window:touchstart') // Para móviles
+  @HostListener('window:touchstart')
   resetInactivityTimer() {
     clearTimeout(this.inactivityTimer);
     
-    // Si el usuario está logueado, reiniciamos el reloj
-    if (this.authService.isLoggedIn()) {
-      this.inactivityTimer = setTimeout(() => {
-        console.warn('Sesión cerrada por inactividad.');
-        this.logout();
-      }, this.TIMEOUT_MINUTES * 60 * 1000);
+    if (typeof window !== 'undefined') {
+      clearTimeout(this.inactivityTimer);
+      
+      if (this.authService.isLoggedIn()) {
+        this.inactivityTimer = setTimeout(() => {
+          console.warn('Sesión cerrada por inactividad.');
+          this.logout();
+        }, this.TIMEOUT_MINUTES * 60 * 1000);
+      }
     }
   }
 
@@ -48,8 +51,10 @@ export class App implements OnInit {
   }
 
   checkScreenSize() {
-    this.isMobile = window.innerWidth <= 1024; 
-    this.isSidebarExpanded = !this.isMobile;
+    if (typeof window !== 'undefined') {
+      this.isMobile = window.innerWidth <= 1024; 
+      this.isSidebarExpanded = !this.isMobile;
+    }
   }
 
   toggleSidebar() {

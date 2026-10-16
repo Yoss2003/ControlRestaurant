@@ -1,0 +1,173 @@
+<div class="modern-dashboard">
+  <header class="dashboard-header">
+    <div class="title-wrapper">
+      <h1 class="main-title">Configuración del <span class="text-orange">Sistema</span></h1>
+      <p class="subtitle">Gestiona tu personal, accesos y datos de la empresa.</p>
+    </div>
+  </header>
+
+  <main class="modern-panel">
+    <!-- PESTAÑAS -->
+    <div class="panel-toolbar mb-4">
+      <div class="tabs-container" style="border-bottom: 2px solid var(--border-color); width: 100%;">
+        <button class="tab-btn" [class.active]="activeTab === 'Usuarios'" (click)="setTab('Usuarios')">
+          👥 Usuarios y Roles
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'General'" (click)="setTab('General')">
+          🏢 Datos del Restaurante
+        </button>
+        <button *ngIf="isSuperAdmin" class="tab-btn" [class.active]="activeTab === 'Empresas'" (click)="setTab('Empresas')">
+          🌍 Gestión de Empresas
+        </button>
+      </div>
+    </div>
+
+    <!-- PESTAÑA: USUARIOS -->
+    <div *ngIf="activeTab === 'Usuarios'">
+      
+      <!-- Cabecera de la sección -->
+      <div class="flex-between mb-3">
+        <h3 class="panel-title m-0">Personal del Restaurante</h3>
+        <button class="btn btn-primary" (click)="openUserModal()">+ Nuevo Usuario</button>
+      </div>
+
+      <!-- NUEVO: Barra de Búsqueda y Filtros -->
+      <div class="panel-toolbar mb-3" style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; gap: 1rem; align-items: center;">
+        
+        <!-- Búsqueda por texto -->
+        <div style="flex: 2;">
+          <input type="text" 
+                 [(ngModel)]="searchUsername" 
+                 (ngModelChange)="applyFilters()" 
+                 placeholder="Buscar por nombre de usuario..." 
+                 class="modern-input w-100">
+        </div>
+
+        <!-- Filtro por Rol -->
+        <div style="flex: 1; min-width: 200px;">
+          <select [(ngModel)]="filterRole" (ngModelChange)="applyFilters()" class="modern-input w-100">
+            <option value="Todos">Todos los roles</option>
+            <option value="SuperAdmin">Administradores</option>
+            <option value="Kitchen">Cocina</option>
+            <option value="Waiter">Meseros</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tabla de Usuarios -->
+      <div class="inventory-grid-container" style="border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+        
+        <div class="inventory-header" style="grid-template-columns: 2fr 2fr 100px;">
+          <div class="col-header text-muted font-bold">Usuario (Login)</div>
+          <div class="col-header text-muted font-bold">Rol / Permisos</div>
+          <div class="col-header text-muted font-bold text-center">Acciones</div>
+        </div>
+        
+        <!-- AHORA ITERAMOS SOBRE filteredUsers -->
+        <div class="inventory-row" *ngFor="let user of filteredUsers" style="grid-template-columns: 2fr 2fr 100px;">
+          <div class="cell-name font-bold">{{ user.username }}</div>
+          <div>
+            <span class="badge" 
+                  [ngStyle]="{'background-color': user.role === 'SuperAdmin' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.1)',
+                              'color': user.role === 'SuperAdmin' ? 'var(--green-brand)' : 'var(--text-main)'}">
+              {{ user.role }}
+            </span>
+          </div>
+          <div class="cell-actions">
+            <!-- Bloqueamos la edición/eliminación si el usuario es el admin principal para proteger el sistema -->
+            <button class="btn-icon btn-icon-edit" (click)="openUserModal(user)">✏️</button>
+            <button class="btn-icon btn-icon-danger" (click)="deleteUser(user.id)" [disabled]="user.username.toLowerCase() === 'admin'" [title]="user.username.toLowerCase() === 'admin' ? 'No se puede eliminar al admin principal' : 'Eliminar usuario'">🗑️</button>
+          </div>
+        </div>
+
+        <!-- Estado vacío si el filtro no encuentra a nadie -->
+        <div *ngIf="filteredUsers.length === 0" class="text-center text-muted" style="padding: 2rem;">
+          No se encontraron usuarios con ese filtro.
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PESTAÑA: GENERAL -->
+    <div *ngIf="activeTab === 'General'" style="max-width: 600px;">
+      <h3 class="panel-title mb-3">Información para el Ticket</h3>
+      
+      <div class="mb-3">
+        <label class="modern-label">Razón Social o Nombre Comercial</label>
+        <input type="text" [(ngModel)]="restaurantData.name" class="modern-input w-100">
+      </div>
+      <div class="mb-3">
+        <label class="modern-label">RUC</label>
+        <input type="text" [(ngModel)]="restaurantData.ruc" class="modern-input w-100">
+      </div>
+      <div class="mb-3">
+        <label class="modern-label">Dirección Fiscal / Local</label>
+        <input type="text" [(ngModel)]="restaurantData.address" class="modern-input w-100">
+      </div>
+      
+      <button class="btn btn-primary mt-3" (click)="saveRestaurantData()">Guardar Datos</button>
+    </div>
+
+    <!-- PESTAÑA: EMPRESAS (SOLO SUPERADMIN) -->
+    <div *ngIf="activeTab === 'Empresas' && isSuperAdmin" style="max-width: 600px;">
+      <h3 class="panel-title mb-1" style="color: var(--orange-brand);">Registrar Nueva Empresa / Cliente</h3>
+      <p class="text-muted mb-4" style="font-size: 0.9rem;">Crea un espacio de trabajo totalmente nuevo y aislado en la base de datos.</p>
+      
+      <div style="background: rgba(255,255,255,0.02); padding: 1.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+        <div class="mb-3">
+          <label class="modern-label">Nombre del Restaurante / Empresa</label>
+          <input type="text" [(ngModel)]="newRestaurantData.name" class="modern-input w-100" placeholder="Ej: Pizzería La Bella">
+        </div>
+        <div class="mb-3">
+          <label class="modern-label">RUC (Opcional)</label>
+          <input type="text" [(ngModel)]="newRestaurantData.ruc" class="modern-input w-100">
+        </div>
+        <div class="mb-3">
+          <label class="modern-label">Dirección (Opcional)</label>
+          <input type="text" [(ngModel)]="newRestaurantData.address" class="modern-input w-100">
+        </div>
+        
+        <button class="btn btn-primary mt-2 w-100" (click)="createNewRestaurant()">
+          Crear Nueva Empresa
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL DE USUARIO -->
+  <div class="modal-overlay" *ngIf="showUserModal">
+    <div class="modal-content" style="max-width: 400px; margin: auto;">
+      <div class="modal-header">
+        <h3 class="panel-title m-0">{{ isEditingUser ? 'Editar Usuario' : 'Nuevo Usuario' }}</h3>
+        <button class="btn-close" (click)="closeUserModal()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="modern-label">Nombre de Usuario</label>
+          <input type="text" [(ngModel)]="currentUser.username" class="modern-input w-100" placeholder="Ej: cajero_juan">
+        </div>
+        <div class="mb-3">
+          <label class="modern-label">Contraseña <span *ngIf="isEditingUser" class="text-muted" style="font-weight: normal;">(Dejar en blanco si no se cambia)</span></label>
+          <input type="password" [(ngModel)]="currentUser.password" class="modern-input w-100" placeholder="••••••••">
+        </div>
+        <div class="mb-3">
+          <label class="modern-label">Rol en el sistema</label>
+          <select [(ngModel)]="currentUser.role" class="modern-input w-100">
+            <option value="" disabled selected hidden>Seleccione Rol</option>
+            <option value="SuperAdmin">Administrador (Acceso Total)</option>
+            <option value="Kitchen">Cocinero (Solo KDS)</option>
+            <option value="Waiter">Mesero (Solo Toma de Pedidos)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary w-100" (click)="closeUserModal()">Cancelar</button>
+        <button class="btn btn-primary w-100" (click)="saveUser()" [disabled]="isSavingUser">
+          {{ isSavingUser ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="toastMessage" class="toast" [ngClass]="'toast-' + toastType">{{ toastMessage }}</div>
+</div>

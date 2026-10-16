@@ -1,5 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
 
@@ -53,11 +53,19 @@ export class DishesManagementComponent implements OnInit {
   };
 
   // INYECTAMOS EL ChangeDetectorRef COMO EN TU INVENTARIO
-  constructor(private adminService: AdminService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private adminService: AdminService, 
+    private cdr: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
-  ngOnInit() { 
-    this.loadDishes(); 
-    this.loadRealIngredients(); 
+  ngOnInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadDishes();
+      this.loadRealIngredients();
+    } else {
+      this.isLoadingDishes = false;
+    }
   }
 
   loadDishes() {

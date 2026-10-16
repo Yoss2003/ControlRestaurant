@@ -1,12 +1,14 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './auth/login/login';
 import { MainLayout } from './layout/main-layout/main-layout'; // Importa el layout que acabamos de crear
-import { Dashboard } from './admin/dashboard/dashboard';
+import { DashboardComponent } from './admin/dashboard/dashboard';
 import { DishesManagementComponent } from './admin/dishes-management/dishes-management';
 import { InventoryComponent } from './admin/inventory/inventory';
 import { KitchenDisplayComponent } from './admin/kitchen-display/kitchen-display';
-import { Orders } from './admin/orders/orders';
+import { OrdersComponent } from './admin/orders/orders';
 import { AuthGuard } from './core/guards/auth-guard';
+import { CashRegisterComponent } from './admin/cash-register/cash-register';
+import { SettingsComponent } from './admin/settings/settings';
 
 export const routes: Routes = [
   // 1. RUTA PÚBLICA (Sin Sidebar)
@@ -21,7 +23,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { 
         path: 'dashboard', 
-        component: Dashboard,
+        component: DashboardComponent,
         data: { expectedRoles: ['SuperAdmin', 'Admin'] } 
       },
       { 
@@ -41,8 +43,18 @@ export const routes: Routes = [
       },
       { 
         path: 'pedidos', 
-        component: Orders,
+        component: OrdersComponent,
         data: { expectedRoles: ['SuperAdmin', 'Admin', 'Waiter'] }
+      },
+      { 
+        path: 'caja', 
+        component: CashRegisterComponent, 
+        data: { expectedRoles: ['SuperAdmin', 'Admin'] } 
+      },
+      { 
+        path: 'ajustes', 
+        component: SettingsComponent, 
+        data: { expectedRoles: ['SuperAdmin', 'Admin'] } 
       }
     ]
   },
