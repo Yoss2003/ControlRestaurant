@@ -167,17 +167,14 @@ export class DishesManagementComponent implements OnInit {
   }
 
   getMaxCookablePortions(dish: any): { available: number, target: number } {
-    // Nota: Si el plato seleccionado es el que estás editando, usamos las porciones actuales del formulario (recipePayload.yieldPortions). 
-    // Para los demás platos del catálogo, asumimos un objetivo de 1 o el valor que tengan guardado.
     let target = (this.selectedDish && this.selectedDish.id === dish.id) ? this.recipePayload.yieldPortions : 1;
     if (target <= 0) target = 1;
 
-    // Si el plato no tiene ingredientes cargados en memoria, retornamos 0/target
     if (!this.selectedDish || this.selectedDish.id !== dish.id || this.recipePayload.items.length === 0) {
       return { available: 0, target: target };
     }
 
-    let minPortionsPossible = target;
+    let minPortionsPossible = Infinity; 
 
     for (let item of this.recipePayload.items) {
       if (!item.ingredientId || !item.totalQuantity) continue;
@@ -188,13 +185,11 @@ export class DishesManagementComponent implements OnInit {
         break;
       }
 
-      // Convertimos la cantidad requerida a la unidad base del inventario
-      let requiredPerPlate = this.convertQuantity(item.totalQuantity, item.unit, ing.unitOfMeasure);
-      if (requiredPerPlate <= 0) continue;
+      let convertedTotal = this.convertQuantity(item.totalQuantity, item.unit, ing.unitOfMeasure);
+      if (convertedTotal <= 0) continue;
 
-      let currentStock = ing.currentStock || 0;
-      
-      // Cuántos platos enteros se pueden hacer con el stock de este ingrediente específico
+      let requiredPerPlate = convertedTotal / target;       
+      let currentStock = ing.currentStock || 0;      
       let possibleWithThisIng = Math.floor(currentStock / requiredPerPlate);
 
       if (possibleWithThisIng < minPortionsPossible) {
@@ -202,8 +197,12 @@ export class DishesManagementComponent implements OnInit {
       }
     }
 
-    // El disponible no puede ser mayor al objetivo ni menor a 0
-    let available = Math.max(0, Math.min(minPortionsPossible, target));
+    if (minPortionsPossible === Infinity) {
+        minPortionsPossible = 0;
+    }
+
+    let available = Math.max(0, minPortionsPossible);
+    
     return { available, target };
   }
 
