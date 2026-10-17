@@ -311,9 +311,9 @@ export class DishesManagementComponent implements OnInit {
 
   saveFullDish() {
     if (!this.newDish.name || !this.newDish.price) return;
-    
     if (this.isSavingDish) return;
-    this.isSavingDish = true; 
+    
+    this.isSavingDish = true;
     this.clearMessages();
 
     const request = this.isCreatingDish 
@@ -323,29 +323,25 @@ export class DishesManagementComponent implements OnInit {
     request.subscribe({
       next: (responseDish: any) => {
         const currentDishId = this.isCreatingDish ? responseDish.id : this.selectedDish.id;
+        
         const itemsValidos = this.recipePayload.items.filter((item: any) => item.ingredientId && item.totalQuantity > 0);
+        
+        const payloadReceta = {
+          dishId: currentDishId,
+          yieldPortions: Number(this.recipePayload.yieldPortions) || 1,
+          items: itemsValidos
+        };
 
-        if (itemsValidos.length > 0) {
-          const payloadReceta = {
-            dishId: currentDishId,
-            yieldPortions: Number(this.recipePayload.yieldPortions) || 1,
-            items: itemsValidos
-          };
-
-          this.adminService.assignRecipe(payloadReceta).subscribe({
-            next: () => {
-              this.successMessage = 'Plato y receta guardados con éxito.';
-              this.finalizeSave();
-            },
-            error: () => {
-              this.showError('Plato guardado, pero falló al guardar la receta.');
-              this.isSavingDish = false; 
-            }
-          });
-        } else {
-          this.successMessage = 'Plato guardado sin receta.';
-          this.finalizeSave();
-        }
+        this.adminService.assignRecipe(payloadReceta).subscribe({
+          next: () => {
+            this.successMessage = 'Plato y receta guardados con éxito.';
+            this.finalizeSave();
+          },
+          error: () => {
+            this.showError('Plato guardado, pero falló la actualización de la receta.');
+            this.isSavingDish = false; 
+          }
+        });
       },
       error: () => {
         this.showError('Error al guardar el plato en el servidor.');
